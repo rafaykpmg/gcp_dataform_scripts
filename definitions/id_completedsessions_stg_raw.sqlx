@@ -1,0 +1,44 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "id_completedsessions_raw_dataform",
+    description: "few transformations ",
+    tags:["internal_dashboard"]
+}
+
+select
+id,
+created_at,
+dealHubsId as deal_id,
+subDealId as subdeal_id,
+tutorId as tutor_id,
+numberOfHours,
+paid_hours,
+total_nb_of_hours,
+total_executed_hours_for_package_sessions,
+studentFullName,
+sessionDate,
+session_time,
+subjectId,
+sessionType,
+sub_deal_type,
+status,
+updated_at,
+session_feedback,
+dateOfAcceptance,
+rejectionReason,
+dealOwner,
+dealOwnerFullName,
+adjustedTutorPrice,
+verifierAdminId,
+updatedAdminId,
+dealName,
+additionalNotes,
+session_rating,
+is_reviewed,
+deleted_at,
+deleted_by,
+is_last_session,
+client_feedback
+from
+`al-gooru.staging.id_completedsessions`

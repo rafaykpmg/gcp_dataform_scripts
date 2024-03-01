@@ -1,0 +1,27 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "prod_fact_deals",
+    description: "creation of fact table",
+    tags: ["fact_table"]
+}
+
+select
+concat(ifnull(b.deal_id,'0'),ifnull(c.subdeal_id,'0')) as id,
+b.deal_id,
+c.subdeal_id,
+a.contact_id,
+dd.DateKey as deal_created_at,
+CAST(FORMAT_DATE('%Y%m%d', a.created_at) AS INT64) AS contact_created_at,
+b.package_length_new as package_length,
+CASE WHEN REGEXP_CONTAINS(CAST(hours_progress____new_ AS STRING), r'^-?\d+(\.\d+)?$') THEN round(cast(hours_progress____new_ as float64),2) ELSE NULL END AS hours_progress_perc,
+CASE WHEN b.package_start_date IS NOT NULL AND TRIM(b.package_start_date) != '' THEN FORMAT_DATE('%Y%m%d', PARSE_DATE('%Y-%m-%d', b.package_start_date)) ELSE NULL END AS package_payment_date,
+count(distinct(c.subject)) as total_subjects
+  FROM
+    ${ref('hubspot_deals_prod_dataform')} b
+    left join `al-gooru.production.dim_date` dd on DATE(b.created_at) = dd.Date
+    left join ${ref('hubspot_contacts_prod_dataform')} a on a.contact_id = b.associated_contact_id
+    left join ${ref('hubspot_subdeals_prod_dataform')} c on b.deal_id = c.associated_deal_id
+    left join ${ref('hubspot_approvedtutor_prod_dataform')} d on c.associated_approved_tutor_id = d.tutor_id
+--    ${ref('hubspot_tickets_prod_dataform')} e
+group by 1,2,3,4,5,6,7,8,9

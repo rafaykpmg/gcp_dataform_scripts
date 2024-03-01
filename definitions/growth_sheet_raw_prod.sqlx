@@ -1,0 +1,34 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "growth_data_prod_datafrom",
+    description: "column transformation and data types ",
+    tags: ["growth_sheet"]
+}
+
+SELECT
+  LOWER(Channel) AS channel,
+  LOWER(Deal_ID) AS deal_id,
+  LOWER(Deal_name) AS deal_name,
+  LOWER(Date) AS date,
+  LOWER(SOURCE) AS source,
+  LOWER(utm_source) AS utm_source,
+  LOWER(utm_campaign) AS utm_campaign,
+  LOWER(utm_medium) AS utm_medium,
+  LOWER(Trial_Session_Total_Amounts) AS trial_session_total_amounts,
+  LOWER(gclid) AS gclid,
+  LOWER(WBRAID) AS wbraid,
+  LOWER(GBRAID) AS gbraid,
+  LOWER(Landing_Page_URL) AS landing_page_url,
+  LOWER(Lead_Score) AS lead_score,
+  LOWER(Amount_Paid) AS amount_paid,
+  LOWER(Valid_Leads) AS valid_leads,
+  LOWER(N__Trial) AS n_trial,
+  LOWER(N__Customers) AS n_customers,
+  LOWER(Trial_to_Customers) AS trial_to_customers,
+  LOWER(N__Active_Users) AS n_active_users,
+  LOWER(N__QL) AS n_ql,
+  LOWER(sub_channel) AS sub_channel,
+  LOWER(Social) AS social
+FROM
+  `al-gooru.raw.growth_raw_data_googlesheet`
