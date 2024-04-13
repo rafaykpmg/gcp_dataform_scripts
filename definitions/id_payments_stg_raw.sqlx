@@ -1,0 +1,37 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "id_payments_raw_dataform",
+    description: "few transformations ",
+    tags:["internal_dashboard"]
+}
+
+select
+id,
+TIMESTAMP_MICROS(CAST(created_at/1000 AS int64)) AS created_at,
+TIMESTAMP_MICROS(CAST(updated_at/1000 AS int64)) AS updated_at,
+lower(firstName) as firstname,
+lower(lastName) as lastname,
+email,
+paymentGateway,
+paymentLink,
+parentPhoneNumber,
+studentPhoneNumber,
+lower(paymentStatus) as paymentstatus,
+chargeId,
+packageCode,
+notes,
+packagesAdminCreatedId,
+segment_anonymous_id,
+paymentResponse,
+paymentCode,
+apsSignature,
+gateway_email,
+gateway_phoneNumber,
+upcoming_payment_id,
+amount,
+token_name,
+agreement_id,
+paid_by_apple,
+from
+al-gooru.staging.id_payments

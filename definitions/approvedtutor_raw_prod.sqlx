@@ -142,6 +142,7 @@ WITH
     MAX(years_of_experience) AS years_of_experience
   FROM
     ${ref('hubspot_approvedtutors_raw_dataform')}
+    where full_name not like ('%test%') and full_name not like ('%Test%') and full_name not like ('%tst%') and full_name not in ('Yasmine Naji','Shireen Kasamani')
   GROUP BY
     1,
     2 )

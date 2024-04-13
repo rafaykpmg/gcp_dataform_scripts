@@ -7,10 +7,19 @@ config {
 }
 
 select
-id as subdeal_id,
+CAST(id AS INT64) AS subdeal_id,
 TIMESTAMP_MICROS(CAST(created_at/1000 AS int64)) AS created_at,
 properties_with_history,
 TIMESTAMP_MICROS(CAST(updated_at/1000 AS int64)) AS updated_at,
+case when trial_session_date is not null and trial_session_date <> '' then
+PARSE_DATE('%Y-%m-%d', trial_session_date)   end as trial_session_date,
+case 
+when subject = '18caf3aa-26d7-4ad7-952d-3ddd4404dde8' then 'foundational_arabic'
+when subject = '7bdea6ee-1e06-4c68-8493-71c823e092b4' then 'middle_school_math'
+when subject = '73335fb4-a548-4e19-8325-1ea018de78be' then 'foundational_english'
+when subject = '15c61ad2-8bc3-4eeb-9c05-99e542a62205' then 'daily_agenda_support'
+when subject = 'e8036965-3be1-402c-a88f-9c6a547fbab1' then 'elementary_math'
+else subject end as subject,
 archived,
 archived_at,
 associations,
@@ -85,7 +94,7 @@ preferred_tutor_nationality__new_,
 proficiency_level,
 recommended_package_duration,
 recommended_package_intensity,
-session_cost,
+safe_cast(session_cost as float64) as session_cost,
 session_date,
 session_type,
 special_requests,
@@ -96,7 +105,6 @@ student_s_weak_points,
 student_s_weak_points__new_,
 sub_deal_type,
 subdeal_status,
-subject,
 test_date,
 test_exam_date,
 time_1,
@@ -108,7 +116,6 @@ time_6,
 time_7,
 total_hours_allocated_for_this_tutor,
 total_nb_of_hours___pikado,
-trial_session_date,
 trial_session_date_range,
 trial_session_feedback,
 trial_session_payment_date,

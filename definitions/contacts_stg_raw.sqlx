@@ -7,7 +7,7 @@ config {
 }
 
 SELECT
-  id AS contact_id,
+  CAST(id AS INT64) AS contact_id,
   created_at,
   -- TIMESTAMP_MICROS(CAST(created_at/1000 AS int64)) AS updated_at,
   REPLACE(phone, '+','') AS phone,

@@ -11,16 +11,21 @@ WITH
   SELECT
     deal_id,
     TIMESTAMP_ADD(created_at, INTERVAL 3 hour) AS created_at,
-    MAX(pipeline) AS pipeline,
+    MAX(lower(pipeline)) AS pipeline,
     MAX(amount_paid) AS amount_paid,
-    MAX(additional_notes) AS additional_notes,
-    MAX(additional_notes_for_lost_reason) AS additional_notes_for_lost_reason,
-    MAX(address) AS address,
+    max(source) AS source,
+    -- MAX(additional_notes) AS additional_notes,
+    -- MAX(additional_notes_for_lost_reason) AS additional_notes_for_lost_reason,
+    -- MAX(address) AS address,
     MAX(amount_in_home_currency) AS amount_in_home_currency,
     MAX(amount) AS amount,
     MAX(amount_remaining) AS amount_remaining,
     MAX(amount_to_be_paid) AS amount_to_be_paid,
     MAX(change_stage_datestamp) AS change_stage_datestamp,
+    MAX(TIMESTAMP_ADD(TIMESTAMP(deal_out_from_new_lead_timestamp), INTERVAL 3 HOUR)) AS deal_out_from_new_lead_timestamp,
+    MAX(payment_method) AS payment_method,
+    MAX(package_contract_length) AS package_contract_length,
+    max(channel_lqs) as channel_lqs,
     MAX(checkout_method) AS checkout_method,
     MAX(child_additional_contact_number) AS child_additional_contact_number,
     MAX(churn_reason) AS churn_reason,
@@ -54,7 +59,6 @@ WITH
     MAX(cx_tutor_matchmaking_at) AS cx_tutor_matchmaking_at,
     MAX(days_to_close) AS days_to_close,
     MAX(deal_currency_code) AS deal_currency_code,
-    MAX(deal_out_from_new_lead_timestamp) AS deal_out_from_new_lead_timestamp,
     MAX(deal_owner_email) AS deal_owner_email,
     MAX(deal_owner_full_name) AS deal_owner_full_name,
     MAX(deal_stage_copy) AS deal_stage_copy,
@@ -64,7 +68,7 @@ WITH
     MAX(description) AS description,
     MAX(discount) AS discount,
     MAX(district) AS district,
-    MAX(district___new_) AS district___new_,
+    MAX(district_new_) AS district_new_,
     MAX(due_renewal_timestamp) AS due_renewal_timestamp,
     MAX(educational_level) AS educational_level,
     MAX(educational_level_group) AS educational_level_group,
@@ -80,7 +84,7 @@ WITH
     MAX(external_reason_1) AS external_reason_1,
     MAX(external_reason_2) AS external_reason_2,
     MAX(external_reason_3) AS external_reason_3,
-    MAX(first_payment_amount__sales_) AS first_payment_amount__sales_,
+    MAX(first_payment_amount_sales) AS first_payment_amount_sales,
     MAX(first_session_date) AS first_session_date,
     MAX(flow) AS flow,
     MAX(freeze_package_reason) AS freeze_package_reason,
@@ -403,7 +407,6 @@ WITH
     MAX(other_city) AS other_city,
     MAX(other_subjects) AS other_subjects,
     MAX(out_of_new_lead_date) AS out_of_new_lead_date,
-    MAX(package_contract_lengh) AS package_contract_lengh,
     MAX(package_length_new) AS package_length_new,
     MAX(package_length_unit) AS package_length_unit,
     MAX(package_level_type) AS package_level_type,
@@ -413,7 +416,6 @@ WITH
     MAX(parent_name) AS parent_name,
     MAX(partnership) AS partnership,
     MAX(payment_link_sent_timestamp) AS payment_link_sent_timestamp,
-    MAX(payment_method) AS payment_method,
     MAX(pikado) AS pikado,
     MAX(preferred_tutor_gender) AS preferred_tutor_gender,
     MAX(preferred_tutor_gender_2) AS preferred_tutor_gender_2,
@@ -447,7 +449,6 @@ WITH
     MAX(session_type_2) AS session_type_2,
     MAX(session_type_3) AS session_type_3,
     MAX(slug) AS slug,
-    MAX(LOWER(SOURCE)) AS SOURCE,
     MAX(sp_1st_call_na_timestamp) AS sp_1st_call_na_timestamp,
     MAX(sp_2nd_call_na_timestamp) AS sp_2nd_call_na_timestamp,
     MAX(sp_callback_timestamp) AS sp_callback_timestamp,
@@ -489,8 +490,8 @@ WITH
     MAX(subjects) AS subjects,
     MAX(test_log) AS test_log,
     MAX(time_in_stage) AS time_in_stage,
-    MAX(time_to_tmm) AS time_to_tmm,
-    MAX(time_to_tmm_cx) AS time_to_tmm_cx,
+    MAX(safe_divide(time_to_tmm_sales,3600000)) AS time_to_tmm_sales,
+    MAX(safe_divide(time_to_tmm_cx,3600000)) AS time_to_tmm_cx,
     MAX(today_s_date) AS today_s_date,
     MAX(total_allocated_hours) AS total_allocated_hours,
     MAX(total_executed_hours_for__all_sessions_types) AS total_executed_hours_for__all_sessions_types,
@@ -499,7 +500,7 @@ WITH
     MAX(total_number_of_executed_hours) AS total_number_of_executed_hours,
     MAX(total_number_of_executed_hours_new) AS total_number_of_executed_hours_new,
     MAX(total_number_of_hours) AS total_number_of_hours,
-    MAX(total_trial_hours) AS total_trial_hours,
+    MAX(total_trial_hours) as total_trial_hours,
     MAX(trial_date) AS trial_date,
     MAX(trial_session_amount) AS trial_session_amount,
     MAX(trial_session_cost) AS trial_session_cost,
@@ -559,20 +560,19 @@ WITH
     MAX(whatsapp_group_link_3) AS whatsapp_group_link_3
   FROM
     ${ref('hubspot_deals_raw_dataform')}
-  WHERE
-    dealname NOT LIKE '%test%'
-    AND dealname <> 'anise safa'
-    AND dealname NOT LIKE '%tset%'
-    AND dealname NOT LIKE '%tst%'
   GROUP BY
     1,
     2)
-SELECT
-  a.*,
-  b.associated_contact_id
-FROM
-  cte a
-LEFT JOIN
-  `al-gooru.raw.association_deal_hubspot` b
-ON
-  a.deal_id= b.deal_id
+
+
+  SELECT
+    a.*,
+    cast(b.associated_contact_id as int64) as associated_contact_id
+  FROM
+    cte a
+  LEFT JOIN
+    `al-gooru.raw.association_deal_hubspot` b
+  ON
+    a.deal_id= cast(b.deal_id as int64)
+WHERE  dealname NOT LIKE '%test%' AND dealname <> 'anise safa' AND dealname NOT LIKE '%tset%' AND dealname NOT LIKE '%tst%'
+and dealname NOT LIKE '%Test%' 

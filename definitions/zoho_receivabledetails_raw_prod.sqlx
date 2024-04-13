@@ -1,0 +1,41 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "zoho_receivabledetails_prod_dataform",
+    description: "",
+    tags: ["zoho"]
+}
+
+select
+creditnote,
+bcy_item_price,
+description,
+quantity_cancelled,
+currency_code,
+bcy_total,
+project_id,
+product_id,
+contact,
+reporting_tag,
+transaction_id,
+transaction_date,
+item,
+item_id,
+item_name,
+transaction_type,
+reference_number,
+product_name,
+quantity_ordered,
+salesperson_name,
+account_id,
+quantity_invoiced,
+sales_receipt,
+transaction_number,
+fcy_item_price,
+customer_name,
+invoice,
+customer_id,
+currency_id,
+status
+from
+${ref('zoho_receivabledetails_raw_dataform')}

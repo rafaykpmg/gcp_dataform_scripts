@@ -7,22 +7,29 @@ config {
 }
 
 SELECT
-  id AS deal_id,
+  CAST(id AS INT64) AS deal_id,
   TIMESTAMP_MICROS(CAST(created_at/1000 AS int64)) AS created_at,
   properties.additional_notes AS additional_notes,
   properties.additional_notes_for_lost_reason AS additional_notes_for_lost_reason,
   properties.address AS address,
-  properties.amount AS amount,
-  properties.amount_in_home_currency AS amount_in_home_currency,
-  properties.amount_paid AS amount_paid,
+  safe_cast(properties.amount as float64) AS amount,
+  safe_cast(properties.amount_in_home_currency as float64) AS amount_in_home_currency,
+  safe_cast(properties.amount_paid as float64) AS amount_paid,
   properties.amount_remaining AS amount_remaining,
   properties.amount_to_be_paid AS amount_to_be_paid,
   CAST(properties.change_stage_datestamp AS date) AS change_stage_datestamp,
+  CASE
+    WHEN properties.deal_out_from_new_lead_timestamp IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.deal_out_from_new_lead_timestamp ))
+  ELSE NULL
+    END AS deal_out_from_new_lead_timestamp,
+  lower(properties.payment_method) AS payment_method,
+  lower(replace(properties.package_contract_lengh,'Months','Month')) AS package_contract_length,
+  lower(properties.channel_lqs) as channel_lqs,
   properties.checkout_method AS checkout_method,
   properties.child_additional_contact_number AS child_additional_contact_number,
   properties.churn_reason AS churn_reason,
   properties.city AS city,
-  properties.closed_lost_reason AS closed_lost_reason,
+  lower(properties.closed_lost_reason) AS closed_lost_reason,
   properties.closed_won_reason AS closed_won_reason,
   properties.closedate AS closedate,
   properties.closing_sales_owner AS closing_sales_owner,
@@ -141,12 +148,6 @@ END
   AS cx_tutor_matchmaking_at,
   properties.days_to_close AS days_to_close,
   properties.deal_currency_code AS deal_currency_code,
-  CASE
-    WHEN properties.deal_out_from_new_lead_timestamp IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.deal_out_from_new_lead_timestamp ))
-  ELSE
-  NULL
-END
-  AS deal_out_from_new_lead_timestamp,
   properties.deal_owner_email AS deal_owner_email,
   properties.deal_owner_full_name AS deal_owner_full_name,
   properties.deal_stage_copy AS deal_stage_copy,
@@ -206,7 +207,7 @@ END
   properties.description AS description,
   properties.discount AS discount,
   properties.district AS district,
-  properties.district___new_ AS district___new_,
+  properties.district___new_ AS district_new_,
   properties.due_renewal_timestamp,
   properties.educational_level AS educational_level,
   properties.educational_level_group AS educational_level_group,
@@ -222,7 +223,7 @@ END
   properties.external_reason_1 AS external_reason_1,
   properties.external_reason_2 AS external_reason_2,
   properties.external_reason_3 AS external_reason_3,
-  properties.first_payment_amount__sales_ AS first_payment_amount__sales_,
+  round(safe_divide(safe_cast(properties.first_payment_amount__sales_ as float64) , 3.75),2) AS first_payment_amount_sales,
   properties.first_session_date AS first_session_date,
   properties.flow AS flow,
   properties.freeze_package_reason AS freeze_package_reason,
@@ -799,25 +800,24 @@ END
   properties.other_city AS other_city,
   properties.other_subjects AS other_subjects,
   properties.out_of_new_lead_date AS out_of_new_lead_date,
-  properties.package_contract_lengh AS package_contract_lengh,
   properties.package_length_new AS package_length_new,
   properties.package_length_unit AS package_length_unit,
   properties.package_level_type AS package_level_type,
-  properties.package_session_type AS package_session_type,
-  properties.package_start_date AS package_start_date,
+  lower(properties.package_session_type) AS package_session_type,
+  case when properties.package_start_date is not null and properties.package_start_date <> '' then
+  PARSE_DATE('%Y-%m-%d', properties.package_start_date)   end as package_start_date,
   properties.paid_hours AS paid_hours,
   properties.parent_name AS parent_name,
   properties.partnership AS partnership,
   properties.payment_link_sent_timestamp AS payment_link_sent_timestamp,
-  properties.payment_method AS payment_method,
   properties.pikado AS pikado,
   case 
   when properties.pipeline = 'default' then 'sales_pipeline'
-  when properties.pipeline = '10153545' then 'Customer Experience'
-  when properties.pipeline = '32097367' then 'Webinar Pipeline'
-  when properties.pipeline = '48052359' then 'Curriculum leads'
-  when properties.pipeline = '70629019' then 'Trial Session pricing page leads'
-  when properties.pipeline = '77795099' then 'RevFuel Test Sales Pipeline'
+  when properties.pipeline = '10153545' then 'customer experience'
+  when properties.pipeline = '32097367' then 'webinar pipeline'
+  when properties.pipeline = '48052359' then 'curriculum leads'
+  when properties.pipeline = '70629019' then 'trial session pricing page leads'
+  when properties.pipeline = '77795099' then 'revfuel test sales pipeline'
   else null end AS pipeline,
   properties.preferred_tutor_gender AS preferred_tutor_gender,
   properties.preferred_tutor_gender_2 AS preferred_tutor_gender_2,
@@ -841,7 +841,12 @@ END
   properties.required_test AS required_test,
   properties.retained AS retained,
   properties.retention_stage AS retention_stage,
-  properties.sa_group_created_at AS sa_group_created_at,
+    CASE
+    WHEN properties.sa_group_created_at IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.sa_group_created_at ))
+  ELSE
+  NULL
+END
+  AS sa_group_created_at,
   properties.sa_lead_handed_to_cx_at AS sa_lead_handed_to_cx_at,
   properties.sa_payment_link_sent_at AS sa_payment_link_sent_at,
   properties.sa_tutor_matchmaking_at AS sa_tutor_matchmaking_at,
@@ -851,7 +856,7 @@ END
   properties.session_type_2 AS session_type_2,
   properties.session_type_3 AS session_type_3,
   properties.slug AS slug,
-  properties.source AS SOURCE,
+  lower(properties.SOURCE) AS source,
   properties.sp_1st_call_na_timestamp AS sp_1st_call_na_timestamp,
   properties.sp_2nd_call_na_timestamp AS sp_2nd_call_na_timestamp,
   properties.sp_callback_timestamp AS sp_callback_timestamp,
@@ -867,7 +872,13 @@ END
   properties.sp_psainitiated_timestamp AS sp_psainitiated_timestamp,
   properties.sp_trial_session_payment_link_sent_timestamp AS sp_trial_session_payment_link_sent_timestamp,
   properties.sp_trial_session_scheduled_timestamp AS sp_trial_session_scheduled_timestamp,
-  properties.sp_tutormatchmaking_timestamp AS sp_tutormatchmaking_timestamp,
+    CASE
+    WHEN properties.sp_tutormatchmaking_timestamp IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.sp_tutormatchmaking_timestamp ))
+  ELSE
+  NULL
+END
+  AS sp_tutormatchmaking_timestamp,
+  -- timestamp(properties.sp_tutormatchmaking_timestamp) AS sp_tutormatchmaking_timestamp,
   properties.specific_lead_type AS specific_lead_type,
   properties.spouse_additonal_contact_number AS spouse_additonal_contact_number,
   properties.start_date AS start_date,
@@ -893,8 +904,8 @@ END
   properties.subjects AS subjects,
   properties.test_log AS test_log,
   properties.time_in_stage AS time_in_stage,
-  properties.time_to_tmm AS time_to_tmm,
-  properties.time_to_tmm_cx AS time_to_tmm_cx,
+  safe_cast(properties.time_to_tmm as float64) AS time_to_tmm_sales,
+  safe_cast(properties.time_to_tmm_cx as float64) AS time_to_tmm_cx,
   properties.today_s_date AS today_s_date,
   properties.total_allocated_hours AS total_allocated_hours,
   properties.total_executed_hours_for__all_sessions_types AS total_executed_hours_for__all_sessions_types,
@@ -902,12 +913,12 @@ END
   properties.total_free_hours AS total_free_hours,
   properties.total_number_of_executed_hours AS total_number_of_executed_hours,
   properties.total_number_of_executed_hours_new AS total_number_of_executed_hours_new,
-  properties.total_number_of_hours AS total_number_of_hours,
+  safe_cast(properties.total_number_of_hours as float64) AS total_number_of_hours,
   properties.total_trial_hours AS total_trial_hours,
   properties.trial_date AS trial_date,
   properties.trial_session_amount AS trial_session_amount,
   properties.trial_session_cost AS trial_session_cost,
-  properties.trial_session_date AS trial_session_date,
+  safe_cast(properties.trial_session_date as date) AS trial_session_date,
   properties.trial_session_total_amounts AS trial_session_total_amounts,
   properties.trial_status AS trial_status,
   properties.ttc__time_to_close_ AS ttc__time_to_close_,

@@ -1,0 +1,37 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "zoho_creditnotes_prod_dataform",
+    description: "",
+    tags: ["zoho"]
+}
+
+select
+creditnote_id,
+creditnote_number,
+status,
+reference_number,
+date,
+created_time,
+total,
+balance,
+customer_id,
+customer_name,
+applied_invoices,
+is_emailed,
+has_attachment,
+salesperson_name,
+salesperson_id,
+is_viewed_by_client,
+client_viewed_time,
+color_code,
+current_sub_status_id,
+current_sub_status,
+currency_id,
+currency_code,
+last_modified_time,
+exchange_rate,
+template_id,
+template_type
+from
+${ref('zoho_creditnotes_raw_dataform')}

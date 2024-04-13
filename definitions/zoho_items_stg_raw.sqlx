@@ -1,0 +1,42 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "zoho_items_raw_dataform",
+    description: "Time formats are corrected for all the timestamp fields ",
+    tags:["zoho"]
+}
+
+select
+item_id,
+name,
+item_name,
+unit,
+status,
+source,
+is_linked_with_zohocrm,
+zcrm_product_id,
+description,
+rate,
+tax_id,
+tax_name,
+tax_percentage,
+purchase_account_id,
+purchase_account_name,
+account_id,
+account_name,
+purchase_description,
+purchase_rate,
+item_type,
+product_type,
+is_taxable,
+tax_exemption_id,
+tax_exemption_code,
+has_attachment,
+sku,
+image_name,
+image_type,
+image_document_id,
+created_time,
+last_modified_time
+from
+al-gooru.staging.zoho_items

@@ -13,6 +13,7 @@ TIMESTAMP_ADD(created_at, INTERVAL 3 hour) AS created_at,
 max(properties_with_history) AS properties_with_history,
 max(TIMESTAMP_ADD(updated_at, INTERVAL 3 hour)) AS updated_at,
 max(archived) AS archived,
+max(subject) AS subject,
 max(archived_at) AS archived_at,
 max(associations) AS associations,
 max(additional_tutor_feedback) AS additional_tutor_feedback,
@@ -97,7 +98,6 @@ max(student_s_weak_points) AS student_s_weak_points,
 max(student_s_weak_points__new_) AS student_s_weak_points__new_,
 max(lower(sub_deal_type)) AS sub_deal_type,
 max(subdeal_status) AS subdeal_status,
-max(subject) AS subject,
 max(test_date) AS test_date,
 max(test_exam_date) AS test_exam_date,
 max(time_1) AS time_1,
@@ -137,7 +137,8 @@ GROUP BY
 )
 
 
-select a.*, b.associated_deal_id, b.associated_approved_tutor_id
+select a.*,CAST(b.associated_deal_id AS INT64) as associated_deal_id,
+CAST( b.associated_approved_tutor_id AS INT64) as  associated_approved_tutor_id
 from cte a
 left join `al-gooru.raw.association_subdeals_hubspot` b
-on a.subdeal_id = b.subdeal_id
+on a.subdeal_id = CAST(b.subdeal_id AS INT64)
