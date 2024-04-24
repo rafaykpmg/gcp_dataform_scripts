@@ -31,6 +31,7 @@ WITH
     MAX(churn_reason) AS churn_reason,
     MAX(city) AS city,
     MAX(closed_lost_reason) AS closed_lost_reason,
+    MAX(closed_lost_reason_new) as closed_lost_reason_new,
     MAX(closed_won_reason) AS closed_won_reason,
     MAX(closedate) AS closedate,
     MAX(closing_sales_owner) AS closing_sales_owner,

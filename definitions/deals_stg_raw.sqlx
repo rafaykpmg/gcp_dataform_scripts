@@ -30,6 +30,7 @@ SELECT
   properties.churn_reason AS churn_reason,
   properties.city AS city,
   lower(properties.closed_lost_reason) AS closed_lost_reason,
+  lower(properties.closed_lost_reason__new_) AS closed_lost_reason_new,
   properties.closed_won_reason AS closed_won_reason,
   properties.closedate AS closedate,
   properties.closing_sales_owner AS closing_sales_owner,
