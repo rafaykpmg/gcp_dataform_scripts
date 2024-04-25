@@ -25,6 +25,7 @@ SELECT
   lower(properties.payment_method) AS payment_method,
   lower(replace(properties.package_contract_lengh,'Months','Month')) AS package_contract_length,
   lower(properties.channel_lqs) as channel_lqs,
+  lower(properties.lqs_class) as lqs_class,
   properties.checkout_method AS checkout_method,
   properties.child_additional_contact_number AS child_additional_contact_number,
   properties.churn_reason AS churn_reason,

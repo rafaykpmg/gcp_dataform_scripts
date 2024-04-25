@@ -26,6 +26,7 @@ WITH
     MAX(payment_method) AS payment_method,
     MAX(package_contract_length) AS package_contract_length,
     max(channel_lqs) as channel_lqs,
+    max(lqs_class) as lqs_class,
     MAX(checkout_method) AS checkout_method,
     MAX(child_additional_contact_number) AS child_additional_contact_number,
     MAX(churn_reason) AS churn_reason,
