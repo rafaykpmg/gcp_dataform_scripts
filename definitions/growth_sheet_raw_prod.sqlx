@@ -8,7 +8,7 @@ config {
 
 SELECT
   LOWER(Channel) AS channel,
-  cast(Deal_ID as int64) AS deal_id,
+  safe_cast(Deal_ID as int64) AS deal_id,
   LOWER(Deal_name) AS deal_name,
   CAST(date AS DATE) AS date,
   LOWER(SOURCE) AS source,
@@ -20,14 +20,14 @@ SELECT
   LOWER(WBRAID) AS wbraid,
   LOWER(GBRAID) AS gbraid,
   LOWER(Landing_Page_URL) AS landing_page_url,
-  cast(Lead_Score as float64) AS lead_score,
+  safe_cast(Lead_Score as float64) AS lead_score,
   round(safe_cast(REPLACE(REPLACE(amount_paid, 'sar', ''), ',', '') as float64) / 3.75, 2) as  amount_paid_usd,
-  cast(Valid_Leads as int64) AS valid_leads,
+  safe_cast(Valid_Leads as int64) AS valid_leads,
   LOWER(N__Trial) AS n_trial,
   LOWER(N__Customers) AS n_customers,
   LOWER(Trial_to_Customers) AS trial_to_customers,
   LOWER(N__Active_Users) AS n_active_users,
-  cast(N__QL as float64) AS n_ql,
+  safe_cast(N__QL as float64) AS n_ql,
   LOWER(sub_channel) AS sub_channel,
   LOWER(Social) AS social
 FROM
