@@ -177,3 +177,5 @@ tutor_resolution_type,
 tutor_ticket_status
 from 
 al-gooru.staging.hubspot_ticket
+where closed_date != ""
+-- where created_at IS NOT NULL AND updated_at IS NOT NULL
