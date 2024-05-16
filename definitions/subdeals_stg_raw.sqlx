@@ -134,6 +134,7 @@ tutor_replacement_reason,
 tutor_status,
 tutoring_language,
 unexecuted_hours,
-whatsapp_group_link
+whatsapp_group_link,
+scheduling_mode
 from
 al-gooru.staging.hubspot_subdeals
