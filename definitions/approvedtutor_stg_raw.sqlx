@@ -7,7 +7,7 @@ config {
 }
 
 select
-id as tutor_id,
+CAST(id AS INT64) AS tutor_id,
 TIMESTAMP_MICROS(CAST(created_at/1000 AS int64)) AS created_at,
 TIMESTAMP_MICROS(CAST(updated_at/1000 AS int64)) AS updated_at,
 REGEXP_REPLACE(phone_number, r'[^0-9]', '') AS phone_number,
