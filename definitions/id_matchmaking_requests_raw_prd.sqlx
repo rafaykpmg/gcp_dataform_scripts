@@ -1,0 +1,27 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "id_matchmaking_requests_prod_dataform",
+    description: "few transformations ",
+    tags:["internal_dashboard"]
+}
+
+select
+id,
+tutor_id,
+sub_deal_id,
+status,
+accepted_at,
+questioned_at,
+rejected_at,
+rejection_reason,
+rejection_notes,
+created_at,
+updated_at,
+deleted_at,
+deal_id,
+subject_id,
+notification_id,
+is_pledged
+from
+${ref('id_matchmaking_requests_raw_dataform')}

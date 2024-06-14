@@ -20,6 +20,7 @@ when subject = '73335fb4-a548-4e19-8325-1ea018de78be' then 'foundational_english
 when subject = '15c61ad2-8bc3-4eeb-9c05-99e542a62205' then 'daily_agenda_support'
 when subject = 'e8036965-3be1-402c-a88f-9c6a547fbab1' then 'elementary_math'
 else subject end as subject,
+round(safe_divide(safe_cast(session_cost as float64) , 3.75),2) as session_cost,
 archived,
 archived_at,
 associations,
@@ -94,7 +95,6 @@ preferred_tutor_nationality__new_,
 proficiency_level,
 recommended_package_duration,
 recommended_package_intensity,
-safe_cast(session_cost as float64) as session_cost,
 session_date,
 session_type,
 special_requests,
