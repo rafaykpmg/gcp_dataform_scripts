@@ -1,0 +1,28 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "expenses_ftt_ptt_cost",
+    description: "it is taken from google sheet",
+    tags: ["expenses_finance"]
+}
+
+SELECT
+date(a.date_start) as date_start,
+date(a.date_end) as date_end,
+cast(tutor_tools as float64) as tutor_tools,
+cast(hosting_cost as float64) as hosting_cost,
+cast(merchant_processing_fees as float64) as merchant_processing_fees,
+cast(marketing_cost as float64) as marketing_cost,
+cast(growth_salary as float64) as growth_salary,
+cast(sales_salary as float64) as sales_salary,
+cast(sales_commissions as float64) as sales_commissions,
+cast(hubspot_fixed_cost as float64) as hubspot_fixed_cost,
+cast(maqsam as float64) as maqsam,
+cast(messagebird_fixed_cost as float64) as messagebird_fixed_cost,
+cast(messagebird_variable_cost as float64) as messagebird_variable_cost,
+cast(krisp as float64) as krisp,
+cast(hourly_cost as float64) as hourly_cost_tutor
+
+from 
+`al-gooru.raw.variable_fixed_cost_finance` a
+left join `al-gooru.raw.ftt_ptt_tutor_cost` b using(date_start, date_end)
