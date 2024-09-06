@@ -1,0 +1,48 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "prod_fact_sub_deals",
+    description: "creation of fact table",
+    tags: ["fact_table"]
+}
+
+select
+concat(ifnull(c.subdeal_id,0),ifnull(a.contact_id,0)) as id_generated,
+dd.DateKey as dim_date,
+c.subdeal_id as subdeal_id,
+b.deal_id,
+b.source,
+a.contact_id,
+c.created_at as subdeal_created_at,
+b.created_at as deal_created_at,
+a.created_at AS contact_created_at,
+b.package_length_new as package_length,
+b.closed_lost_reason_new AS closed_lost_reason,
+c.subdeal_status as subdeal_status,
+f.tutor_name,
+f.tag,
+c.session_type,
+c.session_cost,
+b.dealname AS dealname,
+c.executed_hours as subdeal_executed_hours,
+CASE WHEN REGEXP_CONTAINS(CAST(hours_progress____new_ AS STRING), r'^-?\d+(\.\d+)?$') THEN round(cast(hours_progress____new_ as float64),2) ELSE NULL END AS hours_progress_perc,
+CASE WHEN b.package_start_date IS NOT NULL THEN b.package_start_date ELSE NULL END AS package_start_date,
+b.amount_paid as amount_paid,
+case when (b.amount_paid > 0) then 1 else 0 end AS converted_flag,
+count(distinct(c.subject)) as total_subjects,
+b.pipeline as pipeline,
+case when tag <> 'Freelance' and c.session_type = 'inPerson' then 1 else 0 end as wrong_session_type,
+case when tag <> 'Freelance' and c.executed_hours <> '0' and c.executed_hours is not null  and  not (c.session_cost between 0.27 and 0.5) then 1 
+when tag <> 'Freelance' and c.executed_hours <> '0' and c.executed_hours is not null and c.session_cost is null then 1
+else 0 end as wrong_session_cost,
+  FROM
+
+${ref('hubspot_subdeals_prod_dataform')} c 
+left join `al-gooru.production.dim_date` dd on DATE(c.created_at) = dd.Date
+left join ${ref('hubspot_deals_prod_dataform')} b on b.deal_id = c.associated_deal_id
+left join ${ref('hubspot_contacts_prod_dataform')} a on a.contact_id = b.associated_contact_id
+left join ${ref('hubspot_approvedtutor_prod_dataform')} d on c.associated_approved_tutor_id = d.tutor_id
+left join `al-gooru.bizops_dataset.Tutor_Details` f on c.tutor_name = f.tutor_id and date(b.created_at) between f.joining_date and f.end_date
+#where deal_id = 21245070672
+group by all
+order by c.created_at desc

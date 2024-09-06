@@ -869,7 +869,7 @@ END
   properties.sp_leads_from_wa_timestamp AS sp_leads_from_wa_timestamp,
   properties.sp_leads_from_webinar_timestamp AS sp_leads_from_webinar_timestamp,
   properties.sp_newleads_timestamp AS sp_newleads_timestamp,
-  properties.sp_payment_complete_timestamp AS sp_payment_complete_timestamp,
+  timestamp(properties.sp_payment_complete_timestamp) AS sp_payment_complete_timestamp,
   properties.sp_postponed_timestamp AS sp_postponed_timestamp,
   properties.sp_psainitiated_timestamp AS sp_psainitiated_timestamp,
   properties.sp_trial_session_payment_link_sent_timestamp AS sp_trial_session_payment_link_sent_timestamp,

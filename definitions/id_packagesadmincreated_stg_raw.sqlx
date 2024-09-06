@@ -31,7 +31,7 @@ package_type,
 package_educational_level,
 package_initial_discount,
 package_additional_discount,
-final_package_price,
+round(safe_divide(safe_cast(final_package_price as float64) , 3.75),2) AS final_package_price_dollar,
 total_savings,
 number_of_installments,
 installment_amount,
@@ -45,3 +45,4 @@ package_length,
 package_length_unit
 from
 al-gooru.staging.id_packagesadmincreated
+where lower(firstName) not like ('%test%') 

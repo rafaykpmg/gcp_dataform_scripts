@@ -19,6 +19,7 @@ WITH
     MAX(associations) AS associations,
     MAX(accepted_date) AS accepted_date,
     MAX(age) AS age,
+    MAX(contract_type) as contract_type,
     MAX(application_complete) AS application_complete,
     MAX(application_note_attachment_type) AS application_note_attachment_type,
     MAX(application_note_url) AS application_note_url,

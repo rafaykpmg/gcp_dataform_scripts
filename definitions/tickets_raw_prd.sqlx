@@ -20,7 +20,7 @@ MAX(amount_refunded) AS amount_refunded,
 MAX(bank_name) AS bank_name,
 MAX(case_status) AS case_status,
 MAX(client_solution_type) AS client_solution_type,
-MAX(closed_date) AS closed_date,
+MAX(TIMESTAMP_ADD(closed_date, INTERVAL 3 hour)) AS closed_date,
 MAX(closing_sales_owner) AS closing_sales_owner,
 MAX(complainee) AS complainee,
 MAX(created_by) AS created_by,
@@ -115,7 +115,7 @@ MAX(hs_time_in_2) AS hs_time_in_2,
 MAX(hs_time_in_3) AS hs_time_in_3,
 MAX(hs_time_in_4) AS hs_time_in_4,
 MAX(hs_time_to_close_sla_at) AS hs_time_to_close_sla_at,
-MAX(content) AS content,
+-- MAX(content) AS content,
 MAX(hs_all_accessible_team_ids) AS hs_all_accessible_team_ids,
 MAX(hs_all_owner_ids) AS hs_all_owner_ids,
 MAX(hs_all_team_ids) AS hs_all_team_ids,
@@ -159,7 +159,7 @@ MAX(reporting_agent_) AS reporting_agent,
 MAX(source_ref) AS source_ref,
 MAX(source_thread_id) AS source_thread_id,
 MAX(source_type) AS source_type,
-MAX(subject) AS subject,
+MAX(ticket_name) AS ticket_name,
 MAX(submitted_by) AS submitted_by,
 MAX(submitted_date) AS submitted_date,
 MAX(tags) AS tags,
@@ -167,11 +167,16 @@ MAX(tc_poc) AS tc_poc,
 MAX(tc_resolution_description) AS tc_resolution_description,
 MAX(ticket_type) AS ticket_type,
 MAX(time_to_first_agent_reply) AS time_to_first_agent_reply,
-MAX(tutor_matchmaking) AS tutor_matchmaking,
+MAX(lower(tutor_matchmaking_reason)) AS tutor_matchmaking_reason,
 MAX(tutor_resolution_type) AS tutor_resolution_type,
-MAX(tutor_ticket_status) AS tutor_ticket_status
+MAX(tutor_ticket_status) AS tutor_ticket_status,
+max(cast(b.associated_deal_id as int64)) as associated_deal_id,
+max(cast(b.associated_approved_tutor_id as int64)) as associated_approved_tutor_id,
+max(cast(b.associated_subdeal as int64)) as associated_subdeal
 FROM
-  ${ref('hubspot_tickets_raw_dataform')}
+  ${ref('hubspot_tickets_raw_dataform')} a
+  left join al-gooru.raw.hubspot_tickets_association b
+  using(ticket_id)
 GROUP BY
   1,
   2

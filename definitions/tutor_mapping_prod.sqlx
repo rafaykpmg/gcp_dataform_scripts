@@ -1,0 +1,12 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "tutor_id_mapping_final",
+    description: "",
+    tags: ["approvedtutor_pipeline"]
+}
+
+
+select a.id as tutor_id, concat(b.firstName," ",b.lastName) as tutor_name, concat(replace(countryCode,"+",""),phoneNumber) as PhoneNumber,email
+from al-gooru.production.id_tutors_prod_dataform a
+join `al-gooru.production.id_users_prod_dataform` b on a.userid = b.id

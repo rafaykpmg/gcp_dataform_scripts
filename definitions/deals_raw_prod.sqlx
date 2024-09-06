@@ -566,15 +566,27 @@ WITH
     1,
     2)
 
+, ticket_cte as (
+    select associated_deal_id, sum(cast(number_of_hours_refunded as float64)) as number_of_hours_refunded, 
+    sum(cast(amount_refunded as float64)) as amount_refunded
+    from ${ref('hubspot_tickets_prod_dataform')}
+    group by all
+)
+
 
   SELECT
     a.*,
-    cast(b.associated_contact_id as int64) as associated_contact_id
+    cast(b.associated_contact_id as int64) as associated_contact_id,
+    round(safe_divide(amount_refunded , 3.75),2) AS amount_refunded_from_tickets,
+    number_of_hours_refunded as number_of_hours_refunded_from_tickets
   FROM
     cte a
   LEFT JOIN
     `al-gooru.raw.association_deal_hubspot` b
   ON
     a.deal_id= cast(b.deal_id as int64)
-WHERE  dealname NOT LIKE '%test%' AND dealname <> 'anise safa' AND dealname NOT LIKE '%tset%' AND dealname NOT LIKE '%tst%'
+    left join ticket_cte c 
+    on a.deal_id = c.associated_deal_id
+WHERE  (LOWER(dealname) NOT LIKE '%test%' AND LOWER(dealname) NOT LIKE '%tset%' AND LOWER(dealname) NOT LIKE '%tst%') and
+dealname NOT LIKE '%test%' AND dealname <> 'anise safa' AND dealname NOT LIKE '%tset%' AND dealname NOT LIKE '%tst%'
 and dealname NOT LIKE '%Test%' 
