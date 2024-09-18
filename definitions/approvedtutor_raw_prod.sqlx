@@ -140,7 +140,8 @@ WITH
     MAX(willing_to_drive) AS willing_to_drive,
     MAX(willing_to_host) AS willing_to_host,
     MAX(wish_number) AS wish_number,
-    MAX(years_of_experience) AS years_of_experience
+    MAX(years_of_experience) AS years_of_experience,
+    max(internal_dashboard_id) as internal_dashboard_id
   FROM
     ${ref('hubspot_approvedtutors_raw_dataform')}
     where full_name not like ('%test%') and full_name not like ('%Test%') and full_name not like ('%tst%') and full_name not in ('Yasmine Naji','Shireen Kasamani')
