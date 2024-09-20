@@ -130,6 +130,7 @@ WITH
     MAX(trial_online_price) AS trial_online_price,
     MAX(ts_face_to_face_price) AS ts_face_to_face_price,
     MAX(ts_online_price) AS ts_online_price,
+    max(uni_offline_price) as uni_offline_price,
     MAX(tutor_applicant_id) AS tutor_applicant_id,
     MAX(tutor_card) AS tutor_card,
     MAX(tutoring_language) AS tutoring_language,
@@ -144,7 +145,8 @@ WITH
     max(internal_dashboard_id) as internal_dashboard_id
   FROM
     ${ref('hubspot_approvedtutors_raw_dataform')}
-    where full_name not like ('%test%') and full_name not like ('%Test%') and full_name not like ('%tst%') and full_name not in ('Yasmine Naji','Shireen Kasamani')
+    
+    -- full_name not like ('%test%') and full_name not like ('%Test%') and full_name not like ('%tst%') and full_name not in ('Yasmine Naji','Shireen Kasamani')
   GROUP BY
     1,
     2 )

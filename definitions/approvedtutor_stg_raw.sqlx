@@ -29,7 +29,12 @@ a.bio,
 a.categories,
 a.city,
 a.coordinates,
-a.country_of_residence,
+case 
+when a.country_of_residence = '816f04ac-0552-40dd-aa5e-abaa2d659de6' then "Saudi"
+when a.country_of_residence = '0a4305d0-b1f5-4d79-8123-86ad116890e0' then "Lebanon"
+when a.country_of_residence = '58a86551-481b-4b74-ab7b-edc1482ff117' then "Egypt"
+when a.country_of_residence = '001542d2-f21c-4b34-g97f-7abcb2f24e35' then "Other"
+else a.country_of_residence end as country_of_residence,
 a.curriculum,
 a.curriculums_for_tutor,
 a.date_of_application,
@@ -559,6 +564,7 @@ a.trial_offline_price,
 a.trial_online_price,
 a.ts_face_to_face_price,
 a.ts_online_price,
+a.uni___offline_package_price as uni_offline_price,
 a.tutor_applicant_id,
 a.tutor_application_id,
 a.tutor_card,
@@ -576,3 +582,4 @@ from
 `al-gooru.staging.hubspot_approvedtutors` a
 left join ${ref('id_tutors_prod_dataform')} b
 on a.id = b.approvedTutorHubspotId
+
