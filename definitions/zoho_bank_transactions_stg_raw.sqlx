@@ -1,0 +1,45 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "zoho_banktransactions_raw_dataform",
+    description: "Time formats are corrected for all the timestamp fields ",
+    tags:["zoho"]
+}
+
+select
+transaction_id,
+cast(date as date) as date,
+safe_cast(amount as float64) as amount,
+transaction_type,
+status,
+source,
+account_id,
+account_name,
+rule_id,
+rule_name,
+is_auto_categorized,
+account_type,
+price_precision,
+customer_id,
+payee,
+is_paid_via_print_check,
+payroll_tax_group_formatted,
+description,
+currency_id,
+currency_code,
+currency_symbol,
+debit_or_credit,
+offset_account_code,
+offset_account_name,
+is_offsetaccount_matched,
+reference_number,
+reconcile_status,
+imported_transaction_id,
+is_rule_exist,
+rule_details,
+exclude_description,
+is_excluded_by_system,
+running_balance_formatted,
+running_balance
+from
+al-gooru.staging.zoho_bank_transactions

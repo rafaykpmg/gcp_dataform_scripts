@@ -1,0 +1,43 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "zoho_customerpayments_raw_dataform",
+    description: "Time formats are corrected for all the timestamp fields ",
+    tags:["zoho"]
+}
+
+select
+payment_id,
+payment_number,
+retainerinvoice_id,
+invoice_numbers,
+date,
+payment_mode,
+payment_mode_formatted,
+amount,
+bcy_amount,
+unused_amount,
+bcy_unused_amount,
+account_id,
+account_name,
+description,
+reference_number,
+customer_id,
+customer_name,
+created_time,
+last_modified_time,
+last_four_digits,
+gateway_transaction_id,
+payment_gateway,
+bcy_refunded_amount,
+applied_invoices,
+has_attachment,
+documents,
+custom_fields_list,
+tax_account_id,
+tax_account_name,
+tax_amount_withheld,
+payment_type,
+settlement_status
+from
+al-gooru.staging.zoho_customer_payments

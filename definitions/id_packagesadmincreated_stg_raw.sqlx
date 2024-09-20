@@ -1,0 +1,48 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "id_packagesadmincreated_raw_dataform",
+    description: "few transformations ",
+    tags:["internal_dashboard"]
+}
+
+select
+id,
+firstName,
+lastName,
+safe_cast(countryCode as int64) as countrycode,
+safe_cast(phoneNumber as int64) as phonenumber,
+packageName as packagename,
+safe_cast(packageHours as float64) as packagehours,
+safe_cast(packagePrice as float64) as packageprice,
+packageLink as packagelink,
+priceEdited,
+packageNumber,
+safe_cast(dealId as int64) as deal_id,
+safe_cast(sub_deal_id as int64) as sub_deal_id,
+timestamp(created_at) as created_at,
+timestamp(updated_at) as updated_at,
+lower(paymentType) as paymenttype,
+amountToPayNow,
+package_id,
+VAT,
+package_months,
+package_type,
+package_educational_level,
+package_initial_discount,
+package_additional_discount,
+round(safe_divide(safe_cast(final_package_price as float64) , 3.75),2) AS final_package_price_dollar,
+total_savings,
+number_of_installments,
+installment_amount,
+safe_cast(installment_order as float64) as installment_order,
+admin_id,
+upfront_payment_discount,
+lower(vat_type) as vat_type,
+lower(booking_status) as booking_status,
+is_manual_installment,
+package_length,
+package_length_unit
+from
+al-gooru.staging.id_packagesadmincreated
+where lower(firstName) not like ('%test%') 

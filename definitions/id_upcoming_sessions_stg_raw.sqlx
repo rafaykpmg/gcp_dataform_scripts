@@ -1,0 +1,32 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "id_upcoming_sessions_raw_dataform",
+    description: "few transformations ",
+    tags:["internal_dashboard"]
+}
+
+select
+id,
+hs_sub_deal_id,
+hs_deal_id,
+student_name,
+hs_student_id,
+date,
+from_time,
+to_time,
+tutor_id,
+contact_id,
+subject_id,
+status,
+cancellation_reason,
+declined_at,
+rescheduled_to_session_id,
+rescheduled_at,
+rescheduling_notification_id,
+created_at,
+updated_at,
+deleted_at,
+other_subject,
+from
+`al-gooru.staging.id_upcoming_sessions`

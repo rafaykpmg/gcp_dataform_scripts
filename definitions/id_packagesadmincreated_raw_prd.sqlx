@@ -1,0 +1,51 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "id_packagesadmincreated_prod_dataform",
+    description: "few transformations ",
+    tags:["internal_dashboard"]
+}
+
+select
+a.id,
+firstName,
+lastName,
+countrycode,
+phonenumber,
+packagename,
+packagehours,
+packageprice,
+packagelink,
+priceEdited,
+packageNumber,
+deal_id,
+sub_deal_id,
+a.created_at,
+a.updated_at,
+paymenttype,
+amountToPayNow,
+package_id,
+VAT,
+package_months,
+package_type,
+package_educational_level,
+package_initial_discount,
+package_additional_discount,
+final_package_price_dollar,
+total_savings,
+number_of_installments,
+installment_amount,
+installment_order,
+admin_id,
+b.email as admin_email,
+upfront_payment_discount,
+vat_type,
+booking_status,
+is_manual_installment,
+package_length,
+package_length_unit
+from
+${ref('id_packagesadmincreated_raw_dataform')} a
+left join al-gooru.production.id_admins_prod_dataform b on a.admin_id = b.id
+where firstName not like ('%test%') and firstName not like ('%Test%') 
+and lastName not like ('%test%') and lastName not like ('%Test%') 

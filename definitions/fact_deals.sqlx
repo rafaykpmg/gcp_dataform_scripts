@@ -1,0 +1,37 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "prod_fact_deals",
+    description: "creation of fact table deals",
+    tags: ["fact_table"]
+}
+
+select
+concat(ifnull(b.deal_id,0),ifnull(a.contact_id,0)) as id_generated,
+dd.DateKey as dim_date,
+b.deal_id,
+b.source,
+a.contact_id,
+b.created_at as deal_created_at,
+(ifnull(b.total_number_of_hours,0)) as total_hours,
+ifnull(b.number_of_hours_refunded_from_tickets,0) as hours_refunded_tickets,
+safe_divide(amount_paid,safe_divide(b.amount_in_home_currency,3.75)) * safe_cast(b.total_number_of_hours as float64) as hours_installment_paid,
+a.created_at AS contact_created_at,
+b.package_length_new as package_length,
+b.closed_lost_reason_new AS closed_lost_reason,
+b.dealname AS dealname,
+CASE WHEN REGEXP_CONTAINS(CAST(hours_progress____new_ AS STRING), r'^-?\d+(\.\d+)?$') THEN round(cast(hours_progress____new_ as float64),2) ELSE NULL END AS hours_progress_perc,
+CASE WHEN b.package_start_date IS NOT NULL THEN b.package_start_date ELSE NULL END AS package_start_date,
+b.amount_paid as amount_paid,
+(ifnull(b.amount_paid,0) - ifnull(b.amount_refunded_from_tickets,0)) as net_amount_paid,
+case when (b.amount_paid > 0) then 1 else 0 end AS converted_flag,
+count(distinct(c.subject)) as total_subjects,
+b.pipeline as pipeline
+  FROM
+    ${ref('hubspot_deals_prod_dataform')} b
+    left join `al-gooru.production.dim_date` dd on DATE(b.created_at) = dd.Date
+    left join ${ref('hubspot_contacts_prod_dataform')} a on a.contact_id = b.associated_contact_id
+    left join ${ref('hubspot_subdeals_prod_dataform')} c on b.deal_id = c.associated_deal_id
+    left join ${ref('hubspot_approvedtutor_prod_dataform')} d on c.associated_approved_tutor_id = d.tutor_id
+--    ${ref('hubspot_tickets_prod_dataform')} e
+group by all

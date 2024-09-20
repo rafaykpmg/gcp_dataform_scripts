@@ -1,0 +1,26 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "id_users_raw_dataform",
+    description: "few transformations ",
+    tags:["internal_dashboard"]
+}
+
+select
+id,
+firstName,
+phoneNumber,
+userType,
+hasUserAcceptedNotifications,
+kumulosInstallId,
+onesignal_user_id,
+language,
+remember_token,
+created_at,
+updated_at,
+lastName,
+countryCode,
+app_version,
+payment_token_name
+from
+al-gooru.staging.id_users
