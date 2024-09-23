@@ -1,0 +1,12 @@
+release:
+  default_branch: test
+  environments:
+    production:
+      branch: test
+    staging:
+      branch: test
+
+schedule:
+  daily_run:
+    cron: "0 3 * * *"  # This is just an example; adjust the timing as needed.
+    environment: production
