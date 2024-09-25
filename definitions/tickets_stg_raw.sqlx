@@ -101,6 +101,8 @@ case when hs_pipeline_stage= '1' then 'New'
      when hs_pipeline_stage= '120121874' then 'tutor_matchmaking'
      when hs_pipeline_stage= '109390109' then 'pending_refund'
      when hs_pipeline_stage= '4' then 'closed'
+     when hs_pipeline_stage= '247535618' then 'Sales Checkpoint'
+     when hs_pipeline_stage= '247539459' then 'Replacements'
      else null end as hs_pipeline_stage,
 hs_primary_company,
 hs_primary_company_id,
