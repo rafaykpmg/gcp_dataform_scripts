@@ -8,6 +8,7 @@ config {
 
 select
 id,
+availability_time_slot_id,
 cast(hs_sub_deal_id as int64) as hs_sub_deal_id,
 cast(hs_deal_id as int64) as hs_deal_id,
 student_name,

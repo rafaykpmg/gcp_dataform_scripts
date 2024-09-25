@@ -21,6 +21,7 @@ WITH
     `al-gooru.staging.tutor_availability_time_slots` )
 
 SELECT
+  a.availability_time_slot_id,
   a.tutor_id,
   c.tutor_name,
   b.from_time,
