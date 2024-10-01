@@ -9,7 +9,7 @@ config {
 select
 ticket_id,
 TIMESTAMP_ADD(created_at, INTERVAL 3 hour) AS created_at,
-max(time_to_close) as time_to_close,
+cast(max(time_to_close) as int64) as time_to_close,
 max(hs_all_associated_contact_phones) as hs_all_associated_contact_phones,
 max(updated_at) as updated_at,
 MAX(archived) AS archived,
