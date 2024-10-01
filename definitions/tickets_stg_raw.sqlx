@@ -8,7 +8,7 @@ config {
 select
 id as ticket_id,
 TIMESTAMP_MICROS(CAST(created_at/1000 AS int64)) AS created_at,
-(cast(time_to_close as int64) / 1000.0 / 60.0 / 60.0) as time_to_close,
+(safe_cast(time_to_close as int64) / 1000.0 / 60.0 / 60.0) as time_to_close,
 REGEXP_REPLACE(hs_all_associated_contact_phones, r'[^0-9]', '') as hs_all_associated_contact_phones,
 TIMESTAMP_MICROS(CAST(updated_at/1000 AS int64)) AS updated_at,
 archived,
