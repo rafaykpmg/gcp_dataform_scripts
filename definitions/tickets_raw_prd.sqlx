@@ -172,7 +172,8 @@ MAX(tutor_resolution_type) AS tutor_resolution_type,
 MAX(tutor_ticket_status) AS tutor_ticket_status,
 max(cast(b.associated_deal_id as int64)) as associated_deal_id,
 max(cast(b.associated_approved_tutor_id as int64)) as associated_approved_tutor_id,
-max(cast(b.associated_subdeal as int64)) as associated_subdeal
+max(cast(b.associated_subdeal as int64)) as associated_subdeal,
+max(cast(b.associated_contact as int64)) as associated_contact
 FROM
   ${ref('hubspot_tickets_raw_dataform')} a
   left join al-gooru.raw.hubspot_tickets_association b
