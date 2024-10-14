@@ -1,0 +1,34 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "website_events_raw_users_table_dataform",
+    description: "",
+    tags:["website_events"]
+}
+
+with cte as (
+SELECT user_id, timestamp as first_seen_timestamp, session_id, event_name, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS rn, JSON_VALUE(json, '$.context_source') AS source, JSON_VALUE(json, '$.page_source') AS page_source
+FROM  ${ref('website_events_stg_dataform')}
+)
+
+, final_cte as (
+select * from cte
+where rn = 1
+)
+
+, deal_cte as (
+select user_id, timestamp, JSON_VALUE(json, '$.deal_id') AS deal_id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS rn
+ from 
+ ${ref('website_events_stg_dataform')} 
+ where event_name = 'sign_up_flow_go_to_payment'
+)
+
+
+select a.* except(rn), b.deal_id, c.amount_paid, c.package_start_timestamp
+from final_cte a 
+left join deal_cte b
+using(user_id)
+left join ${ref('prod_fact_deals')}  c
+on cast(b.deal_id as int64) = c.deal_id
+where b.rn = 1
+
