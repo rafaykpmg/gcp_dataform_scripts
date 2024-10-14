@@ -1,0 +1,273 @@
+config {
+    type: "table",
+    schema: "staging",
+    name: "website_events_stg_dataform",
+    description: "",
+    tags:["website_events"]
+}
+
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+      context_campaign_name AS context_campaign_name,
+      coalesce(context_campaign_source,page_name) AS context_source
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_started`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+      context_campaign_name AS context_campaign_name,
+      context_campaign_source AS context_source
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_subjects_screen`
+union all
+select id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from
+`al-gooru.website_dev.sign_up_flow_subjects_search_started`
+union all
+select  id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+      is_found AS is_found,
+      subject_name AS subject_name
+    )) AS json
+from
+`al-gooru.website_dev.sign_up_flow_subject_selected`
+union all
+select id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_sub_levels_screen`
+union all
+select id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+      sub_level AS sub_level
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_sub_level_selected`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_grades_pop_up`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    grade as grade
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_grade_selected`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_curriculum_screen`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    curriculum as curriculum
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_curriculum_selected`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_preference_screen`
+union all
+select
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    session_type as session_type,
+    tutor_gender as tutor_gender
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_preference_selected`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_loader_screen`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    number_of_tutor_found as number_of_tutor_found,
+    excuted_hours as excuted_hours,
+    tutor_id as tutor_id,
+    contract_type as contract_type 
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_suggested_tutor_profile`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    tutors_names as tutors_names,
+    contract_type as contract_type
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_explore_other_tutors_button`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    tutor_id as tutor_id,
+    contract_type as contract_type,
+    excuted_hours as excuted_hours
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_book_this_tutor`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    number_of_tutors_suggested as number_of_tutors_suggested
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_complete_with_no_tutor`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_share_your_location_button`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_location_permission_approved`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_add_location_manually`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_map_screen`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    session_type as session_type
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_sign_up_screen`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp,  session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    deal_id as deal_id,
+      wa_check_box as wa_check_box,
+      lead_type as lead_type
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_form_submit`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    flow as flow,
+      session_type as session_type
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_go_to_payment`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_packages_screen_online_offline`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_packages_screen_online`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    num_of_hours as num_of_hours,
+    session_type as session_type
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_confirm_package`
+union all
+select
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_checkout_screen`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    num_of_hours as num_of_hours,
+    package_length as package_length,
+    package_name as package_name,
+    package_type as package_type,
+    payment_source as payment_source,
+    status as status
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_complete_self_checkout_payment`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, null as session_id,
+  TO_JSON_STRING(
+    STRUCT(
+        null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_self_checkout_payment_failed`
+
+
+
+
+
+
+
+
+
