@@ -1,0 +1,25 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "website_events_raw_sessions_table_dataform",
+    description: "",
+    tags:["website_events"]
+}
+
+with cte as (
+SELECT session_id, user_id, min(timestamp) as session_start_timestamp, max(timestamp) as session_end_timestamp
+FROM  ${ref('website_events_stg_dataform')}
+where session_id is not null
+group by all
+)
+
+, session_source as (
+select session_id, JSON_VALUE(json, '$.context_source') AS source, timestamp, ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY timestamp) AS rn
+from ${ref('website_events_stg_dataform')}
+)
+
+select a.*, b.source
+from cte a 
+left join session_source b
+using(session_id)
+where b.rn = 1
