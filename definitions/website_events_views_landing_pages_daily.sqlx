@@ -1,7 +1,7 @@
 config {
     type: "table",
     schema: "raw",
-    name: "website_events_views_landingpages_dataform",
+    name: "website_events_views_landingpages_daily_dataform",
     description: "",
     tags:["website_events"]
 }
