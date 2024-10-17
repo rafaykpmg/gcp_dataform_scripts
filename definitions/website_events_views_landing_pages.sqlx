@@ -1,0 +1,12 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "website_events_views_landingpages_dataform",
+    description: "",
+    tags:["website_events"]
+}
+
+select 
+date(timestamp) as date,event, page_name,count(distinct anonymous_id) as total_unique_users, count(distinct session_id) as unique_visitor_sessions, count(*) as total_count, 
+from `al-gooru.website_dev.website_page_view` 
+group by all
