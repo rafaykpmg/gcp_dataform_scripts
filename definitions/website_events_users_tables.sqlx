@@ -24,7 +24,7 @@ select user_id, timestamp, JSON_VALUE(json, '$.deal_id') AS deal_id, ROW_NUMBER(
 )
 
 
-select a.* except(rn), b.deal_id, c.amount_paid, c.package_start_timestamp
+select a.* except(rn), b.deal_id,c.deal_created_at, c.amount_paid, c.package_start_timestamp
 from final_cte a 
 left join deal_cte b
 using(user_id)
