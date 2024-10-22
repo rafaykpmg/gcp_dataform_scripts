@@ -7,6 +7,7 @@ config {
 }
 
 select FORMAT_DATE('%Y-%m-01', timestamp) as month,
-event, page_name,count(distinct anonymous_id) as total_unique_users, count(distinct session_id) as unique_visitor_sessions, count(*) as total_count, 
+event, page_name,lower(IF(ARRAY_LENGTH(SPLIT(page_name, '/')) > 1, SPLIT(page_name, '/')[OFFSET(0)], page_name)) AS final_page_name,
+count(distinct anonymous_id) as total_unique_users, count(distinct session_id) as unique_visitor_sessions, count(*) as total_count, 
 from `al-gooru.website_dev.website_page_view` 
 group by all

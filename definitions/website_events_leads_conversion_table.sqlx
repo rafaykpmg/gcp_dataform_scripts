@@ -1,0 +1,26 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "website_events_signupflow_leads_conversion_dataform",
+    description: "",
+    tags:["website_events"]
+}
+
+with cte as (
+    select user_id,session_id, timestamp, JSON_VALUE(json, '$.deal_id') AS deal_id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS user_row_nmb
+    from 
+    ${ref('website_events_signupflow_stg_dataform')} 
+    where event_name = 'sign_up_flow_go_to_payment' and  JSON_VALUE(json, '$.deal_id')  is not null
+)
+
+, final_cte as (
+select a.* , 
+lower(IF(ARRAY_LENGTH(SPLIT(b.page_name, '/')) > 1, SPLIT(b.page_name, '/')[OFFSET(0)], b.page_name)) AS page_view_name, b.timestamp as timestamp_page_view,
+row_number() over(partition by a.deal_id order by b.timestamp) as rn
+from cte a
+left join  `al-gooru.website_dev.website_page_view` b
+on a.user_id =b.anonymous_id and a.session_id = b.session_id
+)
+
+select * except(rn) from final_cte
+where rn = 1

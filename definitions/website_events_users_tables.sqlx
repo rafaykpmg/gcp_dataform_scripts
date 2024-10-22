@@ -7,12 +7,13 @@ config {
 }
 
 with cte as (
-SELECT user_id, timestamp as first_seen_timestamp, session_id, event_name, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS rn, JSON_VALUE(json, '$.context_source') AS source, JSON_VALUE(json, '$.page_source') AS page_source
+SELECT user_id, timestamp as first_seen_timestamp, session_id as first_seen_session_id, event_name, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS rn, JSON_VALUE(json, '$.context_source') AS source, JSON_VALUE(json, '$.page_source') AS page_source
 FROM  ${ref('website_events_signupflow_stg_dataform')}
 )
 
 , final_cte as (
-select * from cte
+select *, REGEXP_EXTRACT(page_source, r'^/([^/]+)(?:/|$)') as main_page
+ from cte
 where rn = 1
 )
 
