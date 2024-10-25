@@ -42,3 +42,4 @@ is_last_session,
 client_feedback
 from
 `al-gooru.staging.id_completedsessions`
+where deleted_at is null
