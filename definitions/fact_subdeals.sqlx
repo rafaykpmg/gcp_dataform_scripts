@@ -18,6 +18,7 @@ b.created_at as deal_created_at,
 a.created_at AS contact_created_at,
 b.package_length_new as package_length,
 b.closed_lost_reason_new AS closed_lost_reason,
+g.nameEn as subject_name,
 c.subdeal_status as subdeal_status,
 f.tutor_name,
 f.tag,
@@ -43,6 +44,8 @@ left join ${ref('hubspot_deals_prod_dataform')} b on b.deal_id = c.associated_de
 left join ${ref('hubspot_contacts_prod_dataform')} a on a.contact_id = b.associated_contact_id
 left join ${ref('hubspot_approvedtutor_prod_dataform')} d on c.associated_approved_tutor_id = d.tutor_id
 left join `al-gooru.bizops_dataset.Tutor_Details` f on c.tutor_name = f.tutor_id and date(b.created_at) between f.joining_date and f.end_date
+left join `al-gooru.production.id_subjects_prod_dataform` g
+on c.subject = g.id
 #where deal_id = 21245070672
 group by all
 order by c.created_at desc
