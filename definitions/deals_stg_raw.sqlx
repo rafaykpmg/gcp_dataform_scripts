@@ -905,6 +905,7 @@ END
   properties.subject_3 AS subject_3,
   properties.subject_3__new_ AS subject_3__new_,
   properties.subjects AS subjects,
+  properties.subject_levels as subject_levels,
   properties.test_log AS test_log,
   properties.time_in_stage AS time_in_stage,
   safe_cast(properties.time_to_tmm as float64) AS time_to_tmm_sales,

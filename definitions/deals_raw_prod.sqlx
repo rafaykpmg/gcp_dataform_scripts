@@ -491,6 +491,7 @@ WITH
     MAX(subject_3) AS subject_3,
     MAX(subject_3__new_) AS subject_3__new_,
     MAX(subjects) AS subjects,
+    MAX(subject_levels) as subject_levels,
     MAX(test_log) AS test_log,
     MAX(time_in_stage) AS time_in_stage,
     MAX(safe_divide(time_to_tmm_sales,3600000)) AS time_to_tmm_sales,
