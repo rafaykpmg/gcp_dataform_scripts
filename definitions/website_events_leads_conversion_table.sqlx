@@ -8,7 +8,7 @@ config {
 
 with go_to_payment_cte as (
     --- Here the user_row_nmb tells me the multiple deal ids for one user_id regardless of the session id.
-    select user_id,session_id, timestamp, JSON_VALUE(json, '$.deal_id') AS deal_id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS user_row_nmb
+    select user_id,session_id, timestamp, JSON_VALUE(json, '$.deal_id') AS deal_id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS user_row_nmb, 'sign_up_flow_go_to_payment' as event_name
     from 
     ${ref('website_events_signupflow_stg_dataform')} 
     where event_name = 'sign_up_flow_go_to_payment' and  JSON_VALUE(json, '$.deal_id')  is not null
@@ -16,7 +16,7 @@ with go_to_payment_cte as (
 
 , form_submit_cte as (
     --- Here the user_row_nmb tells me the multiple deal ids for one user_id regardless of the session id.
-    select user_id,session_id, timestamp, JSON_VALUE(json, '$.deal_id') AS deal_id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS user_row_nmb
+    select user_id,session_id, timestamp, JSON_VALUE(json, '$.deal_id') AS deal_id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS user_row_nmb, 'sign_up_flow_form_submit' as event_name
     from 
     ${ref('website_events_signupflow_stg_dataform')} 
     where event_name = 'sign_up_flow_form_submit' and  JSON_VALUE(json, '$.deal_id')  is not null

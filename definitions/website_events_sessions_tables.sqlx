@@ -13,6 +13,7 @@ where session_id is not null
 group by all
 )
 
+ -- out of all the recorded events, source is the first instance of that
 , session_source as (
 select session_id, JSON_VALUE(json, '$.context_source') AS source, timestamp, ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY timestamp) AS rn
 from ${ref('website_events_signupflow_stg_dataform')}

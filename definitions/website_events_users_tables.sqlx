@@ -21,7 +21,7 @@ where rn = 1
 select user_id, timestamp, JSON_VALUE(json, '$.deal_id') AS deal_id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY timestamp) AS rn
  from 
  ${ref('website_events_signupflow_stg_dataform')} 
- where event_name = 'sign_up_flow_go_to_payment'
+ where event_name in ('sign_up_flow_go_to_payment','sign_up_flow_form_submit')
 )
 
 
