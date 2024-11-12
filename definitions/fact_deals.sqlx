@@ -28,7 +28,8 @@ b.amount_paid as amount_paid,
 (ifnull(b.amount_paid,0) - ifnull(b.amount_refunded_from_tickets,0)) as net_amount_paid,
 case when (b.amount_paid > 0) then 1 else 0 end AS converted_flag,
 count(distinct(c.subject)) as total_subjects,
-b.pipeline as pipeline
+b.pipeline as pipeline,
+b.first_payment_amount_sales as first_payment_amount_sales
   FROM
     ${ref('hubspot_deals_prod_dataform')} b
     left join `al-gooru.production.dim_date` dd on DATE(b.created_at) = dd.Date
