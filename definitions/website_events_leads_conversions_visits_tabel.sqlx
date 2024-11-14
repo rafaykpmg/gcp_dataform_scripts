@@ -10,7 +10,7 @@ config {
 with cte as (
 select 
 month, final_page_name,  
-count(case when user_row_nmb = 1 then deal_id else null end) as total_unique_leads,
+count(case when user_row_nmb = 1 then deal_id else null end) as total_unique_leads, sum(conversion_flag) as total_conversions,
 count(deal_id) as total_leads 
 from ${ref('website_events_signupflow_leads_conversion_dataform')}
   group by all
@@ -22,7 +22,7 @@ from ${ref('website_events_signupflow_leads_conversion_dataform')}
   group by all
 )
 
-select a.month, a.final_page_name, total_visits, total_unique_user_visits,total_unique_leads, total_leads, total_unique_sessions
+select a.month, a.final_page_name, total_visits, total_unique_user_visits,total_unique_leads, total_leads, total_unique_sessions, total_conversions
 from final_cte a
 left join cte b
 on a.final_page_name = b.final_page_name and a.month = b.month
