@@ -57,6 +57,7 @@ case
 when website_page_view is null then event_page_source
 -- when event_page_source is null then website_page_view
 when website_page_view = 'en' then event_page_source
+when timestamp_page_view > timestamp then event_page_source
 else website_page_view end as final_page_name 
 from final_cte
 where rn = 1
