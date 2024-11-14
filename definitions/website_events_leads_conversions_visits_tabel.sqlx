@@ -1,0 +1,29 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "website_events_leads_conversions_visits_table",
+    description: "",
+    tags:["website_events"]
+}
+
+
+with cte as (
+select 
+month, final_page_name,  
+count(case when user_row_nmb = 1 then deal_id else null end) as total_unique_leads,
+count(deal_id) as total_leads 
+from ${ref('website_events_signupflow_leads_conversion_dataform')}
+  group by all
+)
+
+, final_cte as (
+  select month, final_page_name, sum(total_count) as total_visits,sum(total_unique_users) as total_unique_user_visits, sum(unique_visitor_sessions) as total_unique_sessions
+  from ${ref('website_events_views_landingpages_finalpagename_monthly_dataform')}
+  group by all
+)
+
+select a.month, a.final_page_name, total_visits, total_unique_user_visits,total_unique_leads, total_leads, total_unique_sessions
+from final_cte a
+left join cte b
+on a.final_page_name = b.final_page_name and a.month = b.month
+group by all

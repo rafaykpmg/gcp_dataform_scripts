@@ -52,7 +52,7 @@ left join  `al-gooru.website_dev.website_page_view` b
 on a.user_id =b.anonymous_id and a.session_id = b.session_id
 )
 
-select * except(rn),
+select * except(rn), FORMAT_DATE('%Y-%m-01', timestamp) as month,
 case 
 when website_page_view is null then event_page_source
 -- when event_page_source is null then website_page_view
