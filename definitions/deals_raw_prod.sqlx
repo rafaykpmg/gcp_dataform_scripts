@@ -577,7 +577,7 @@ WITH
 
 
   SELECT
-    a.*,
+    a.* except(subject_levels), d.name_en as subject_levels,
     cast(b.associated_contact_id as int64) as associated_contact_id,
     round(safe_divide(amount_refunded , 3.75),2) AS amount_refunded_from_tickets,
     number_of_hours_refunded as number_of_hours_refunded_from_tickets
@@ -589,6 +589,9 @@ WITH
     a.deal_id= cast(b.deal_id as int64)
     left join ticket_cte c 
     on a.deal_id = c.associated_deal_id
+  LEFT JOIN 
+    `al-gooru.staging.id_subject_levels` d 
+    on d.id = a.subject_levels
 WHERE  (LOWER(dealname) NOT LIKE '%test%' AND LOWER(dealname) NOT LIKE '%tset%' AND LOWER(dealname) NOT LIKE '%tst%') and
 dealname NOT LIKE '%test%' AND dealname <> 'anise safa' AND dealname NOT LIKE '%tset%' AND dealname NOT LIKE '%tst%'
 and dealname NOT LIKE '%Test%' 
