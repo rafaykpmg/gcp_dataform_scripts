@@ -577,7 +577,7 @@ WITH
 
 
   SELECT
-    a.* except(subject_levels), d.name_en as subject_levels,
+    a.* except(subject_levels), coalesce(d.name_en,a.subject_levels) as subject_levels,
     cast(b.associated_contact_id as int64) as associated_contact_id,
     round(safe_divide(amount_refunded , 3.75),2) AS amount_refunded_from_tickets,
     number_of_hours_refunded as number_of_hours_refunded_from_tickets
