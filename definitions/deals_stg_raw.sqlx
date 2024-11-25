@@ -390,121 +390,121 @@ END
   ELSE
   NULL
 END
-  AS hs_date_entered_29374211,
+  AS hs_date_entered_payment_link_sent,
   CASE
     WHEN properties.hs_date_entered_29374212 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', CAST(properties.hs_date_entered_29374212 AS string)))
   ELSE
   NULL
 END
-  AS hs_date_entered_29374212,
+  AS hs_date_entered_payment_completed,
   CASE
     WHEN properties.hs_date_entered_29398334 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', cast(properties.hs_date_entered_29398334 as string)))
   ELSE
   NULL
 END
-  AS hs_date_entered_29398334,
+  AS hs_date_entered_new_package_payment_done,
   CASE
     WHEN properties.hs_date_entered_29426996 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_29426996 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_29426996,
+  AS hs_date_entered_cx_tutor_matchmaking,
   CASE
     WHEN properties.hs_date_entered_29426997 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_29426997 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_29426997,
+  AS hs_date_entered_cx_group_created,
   CASE
     WHEN properties.hs_date_entered_29426998 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_29426998 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_29426998,
+  AS `hs_date_entered_completed_&_renewed`,
   CASE
     WHEN properties.hs_date_entered_29426999 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_29426999 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_29426999,
+  AS hs_date_entered_new_package_payment_link_sent,
   CASE
     WHEN properties.hs_date_entered_29437250 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_29437250 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_29437250,
+  AS hs_date_entered_package_in_Progress,
   CASE
     WHEN properties.hs_date_entered_31140490 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_31140490 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_31140490,
+  AS hs_date_entered_lead_handed_over_to_sales,
   CASE
     WHEN properties.hs_date_entered_31779640 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_31779640 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_31779640,
+  AS hs_date_entered_sale_group_created,
   CASE
     WHEN properties.hs_date_entered_31814290 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_31814290 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_31814290,
+  AS hs_date_entered_chat_initiated_on_wa,
   CASE
     WHEN properties.hs_date_entered_33062318 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_33062318 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_33062318,
+  AS hs_date_entered_trial_session_payment_link_sent,
   CASE
     WHEN properties.hs_date_entered_34384521 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_34384521 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_34384521,
+  AS hs_date_entered_due_collection,
   CASE
     WHEN properties.hs_date_entered_34384522 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_34384522 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_34384522,
+  AS hs_date_entered_due_renewal,
   CASE
     WHEN properties.hs_date_entered_34885685 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_34885685 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_34885685,
+  AS hs_date_entered_blocked_packages,
   CASE
     WHEN properties.hs_date_entered_34885686 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_34885686 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_34885686,
+  AS hs_date_entered_frozen_packages,
   CASE
     WHEN properties.hs_date_entered_34885704 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_34885704 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_34885704,
+  AS hs_date_entered_cancelled_packages,
   CASE
     WHEN properties.hs_date_entered_36859269 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_36859269 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_36859269,
+  AS hs_date_entered_trial_session_scheduled,
   CASE
     WHEN properties.hs_date_entered_43120985 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_43120985 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_43120985,
+  AS `hs_date_entered_pending_package_start_retained_clients`,
   CASE
     WHEN properties.hs_date_entered_51791469 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_51791469 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_51791469,
+  AS `hs_date_entered_completed_&_didnt_renew`,
   CASE
     WHEN properties.hs_date_entered_72409906 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_72409906 ))
   ELSE
@@ -540,13 +540,13 @@ END
   ELSE
   NULL
 END
-  AS hs_date_entered_79322152,
+  AS hs_date_entered_postponed_leads,
   CASE
     WHEN properties.hs_date_entered_79359529 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_79359529 ))
   ELSE
   NULL
 END
-  AS hs_date_entered_79359529,
+  AS hs_date_entered_sale_tutor_matchmaking,
   CASE
     WHEN properties.hs_date_entered_81316419 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_81316419 ))
   ELSE
@@ -558,7 +558,7 @@ END
   ELSE
   NULL
 END
-  AS hs_date_entered_93850911,
+  AS hs_date_entered_automatic_ts_payment_complete,
   CASE
     WHEN properties.hs_date_entered_98674320 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_98674320 ))
   ELSE
@@ -571,13 +571,13 @@ END
   NULL
 END
   AS hs_date_entered_98748761,
-  properties.hs_date_entered_appointmentscheduled AS hs_date_entered_appointmentscheduled,
+  properties.hs_date_entered_appointmentscheduled AS hs_date_entered_new_leads,
   properties.hs_date_entered_closedlost AS hs_date_entered_closedlost,
-  properties.hs_date_entered_closedwon AS hs_date_entered_closedwon,
+  properties.hs_date_entered_closedwon AS hs_date_entered_call_back,
   properties.hs_date_entered_contractsent AS hs_date_entered_contractsent,
   properties.hs_date_entered_decisionmakerboughtin AS hs_date_entered_decisionmakerboughtin,
-  properties.hs_date_entered_presentationscheduled AS hs_date_entered_presentationscheduled,
-  properties.hs_date_entered_qualifiedtobuy AS hs_date_entered_qualifiedtobuy,
+  properties.hs_date_entered_presentationscheduled AS hs_date_entered_last_followup_message,
+  properties.hs_date_entered_qualifiedtobuy AS `hs_date_entered_1st_call_NA`,
   properties.hs_date_exited_105474227 AS hs_date_exited_105474227,
   properties.hs_date_exited_136573361 AS hs_date_exited_136573361,
   properties.hs_date_exited_136573362 AS hs_date_exited_136573362,
@@ -594,45 +594,45 @@ END
   properties.hs_date_exited_147868167 AS hs_date_exited_147868167,
   properties.hs_date_exited_147868168 AS hs_date_exited_147868168,
   properties.hs_date_exited_147868169 AS hs_date_exited_147868169,
-  properties.hs_date_exited_29374211 AS hs_date_exited_29374211,
-  properties.hs_date_exited_29374212 AS hs_date_exited_29374212,
-  properties.hs_date_exited_29398334 AS hs_date_exited_29398334,
-  properties.hs_date_exited_29426996 AS hs_date_exited_29426996,
-  properties.hs_date_exited_29426997 AS hs_date_exited_29426997,
-  properties.hs_date_exited_29426998 AS hs_date_exited_29426998,
-  properties.hs_date_exited_29426999 AS hs_date_exited_29426999,
-  properties.hs_date_exited_29437250 AS hs_date_exited_29437250,
-  properties.hs_date_exited_31024232 AS hs_date_exited_31024232,
-  properties.hs_date_exited_31140490 AS hs_date_exited_31140490,
-  properties.hs_date_exited_31779640 AS hs_date_exited_31779640,
-  properties.hs_date_exited_31814290 AS hs_date_exited_31814290,
-  properties.hs_date_exited_33062318 AS hs_date_exited_33062318,
-  properties.hs_date_exited_34384521 AS hs_date_exited_34384521,
-  properties.hs_date_exited_34384522 AS hs_date_exited_34384522,
-  properties.hs_date_exited_34885685 AS hs_date_exited_34885685,
-  properties.hs_date_exited_34885686 AS hs_date_exited_34885686,
-  properties.hs_date_exited_34885704 AS hs_date_exited_34885704,
-  properties.hs_date_exited_36859269 AS hs_date_exited_36859269,
-  properties.hs_date_exited_43120985 AS hs_date_exited_43120985,
-  properties.hs_date_exited_51791469 AS hs_date_exited_51791469,
+  properties.hs_date_exited_29374211 AS hs_date_exited_payment_link_sent,
+  properties.hs_date_exited_29374212 AS hs_date_exited_payment_completed,
+  properties.hs_date_exited_29398334 AS hs_date_exited_new_package_payment_done,
+  properties.hs_date_exited_29426996 AS hs_date_exited_cx_tutor_matchmaking,
+  properties.hs_date_exited_29426997 AS hs_date_exited_cx_group_created,
+  properties.hs_date_exited_29426998 AS `hs_date_exited_completed_&_renewed`,
+  properties.hs_date_exited_29426999 AS hs_date_exited_new_package_payment_link_sent,
+  properties.hs_date_exited_29437250 AS hs_date_exited_package_in_Progress,
+  properties.hs_date_exited_31024232 AS hs_date_exited_lead_lost,
+  properties.hs_date_exited_31140490 AS hs_date_exited_lead_handed_over_to_sales,
+  properties.hs_date_exited_31779640 AS hs_date_exited_sale_group_created,
+  properties.hs_date_exited_31814290 AS hs_date_exited_chat_initiated_on_wa,
+  properties.hs_date_exited_33062318 AS hs_date_exited_trial_session_payment_link_sent,
+  properties.hs_date_exited_34384521 AS hs_date_exited_due_collection,
+  properties.hs_date_exited_34384522 AS hs_date_exited_due_renewal,
+  properties.hs_date_exited_34885685 AS hs_date_exited_blocked_packages,
+  properties.hs_date_exited_34885686 AS hs_date_exited_frozen_packages,
+  properties.hs_date_exited_34885704 AS hs_date_exited_cancelled_packages,
+  properties.hs_date_exited_36859269 AS `hs_date_exited_trial_session_scheduled`,
+  properties.hs_date_exited_43120985 AS `hs_date_exited_pending_package_start_retained_clients`,
+  properties.hs_date_exited_51791469 AS `hs_date_exited_completed_&_didnt_renew`,
   properties.hs_date_exited_72409906 AS hs_date_exited_72409906,
   properties.hs_date_exited_72409907 AS hs_date_exited_72409907,
   properties.hs_date_exited_72409908 AS hs_date_exited_72409908,
   properties.hs_date_exited_72409911 AS hs_date_exited_72409911,
   properties.hs_date_exited_74424719 AS hs_date_exited_74424719,
-  properties.hs_date_exited_79322152 AS hs_date_exited_79322152,
-  properties.hs_date_exited_79359529 AS hs_date_exited_79359529,
+  properties.hs_date_exited_79322152 AS hs_date_exited_postponed_leads,
+  properties.hs_date_exited_79359529 AS hs_date_exited_sale_tutor_matchmaking,
   properties.hs_date_exited_81316419 AS hs_date_exited_81316419,
-  properties.hs_date_exited_93850911 AS hs_date_exited_93850911,
+  properties.hs_date_exited_93850911 AS hs_date_exited_automatic_ts_payment_complete,
   properties.hs_date_exited_98674320 AS hs_date_exited_98674320,
   properties.hs_date_exited_98748761 AS hs_date_exited_98748761,
-  properties.hs_date_exited_appointmentscheduled AS hs_date_exited_appointmentscheduled,
+  properties.hs_date_exited_appointmentscheduled AS hs_date_exited_new_leads,
   properties.hs_date_exited_closedlost AS hs_date_exited_closedlost,
-  properties.hs_date_exited_closedwon AS hs_date_exited_closedwon,
+  properties.hs_date_exited_closedwon AS hs_date_exited_call_back,
   properties.hs_date_exited_contractsent AS hs_date_exited_contractsent,
   properties.hs_date_exited_decisionmakerboughtin AS hs_date_exited_decisionmakerboughtin,
-  properties.hs_date_exited_presentationscheduled AS hs_date_exited_presentationscheduled,
-  properties.hs_date_exited_qualifiedtobuy AS hs_date_exited_qualifiedtobuy,
+  properties.hs_date_exited_presentationscheduled AS hs_date_exited_last_followup_message,
+  properties.hs_date_exited_qualifiedtobuy AS `hs_date_exited_1st_call_NA`,
   properties.hs_days_to_close_raw AS hs_days_to_close_raw,
   properties.hs_deal_amount_calculation_preference AS hs_deal_amount_calculation_preference,
   properties.hs_deal_score AS hs_deal_score,
@@ -697,66 +697,66 @@ END
   properties.hs_time_in_147868167 AS hs_time_in_147868167,
   properties.hs_time_in_147868168 AS hs_time_in_147868168,
   properties.hs_time_in_147868169 AS hs_time_in_147868169,
-  properties.hs_time_in_29374211 AS hs_time_in_29374211,
-  properties.hs_time_in_29374212 AS hs_time_in_29374212,
-  properties.hs_time_in_29398334 AS hs_time_in_29398334,
-  properties.hs_time_in_29426996 AS hs_time_in_29426996,
-  properties.hs_time_in_29426997 AS hs_time_in_29426997,
-  properties.hs_time_in_29426998 AS hs_time_in_29426998,
-  properties.hs_time_in_29426999 AS hs_time_in_29426999,
-  properties.hs_time_in_29437250 AS hs_time_in_29437250,
-  properties.hs_time_in_31024232 AS hs_time_in_31024232,
-  properties.hs_time_in_31140490 AS hs_time_in_31140490,
-  properties.hs_time_in_31779640 AS hs_time_in_31779640,
-  properties.hs_time_in_31814290 AS hs_time_in_31814290,
-  properties.hs_time_in_33062318 AS hs_time_in_33062318,
-  properties.hs_time_in_34384521 AS hs_time_in_34384521,
-  properties.hs_time_in_34384522 AS hs_time_in_34384522,
-  properties.hs_time_in_34885685 AS hs_time_in_34885685,
-  properties.hs_time_in_34885686 AS hs_time_in_34885686,
-  properties.hs_time_in_34885704 AS hs_time_in_34885704,
-  properties.hs_time_in_36859269 AS hs_time_in_36859269,
-  properties.hs_time_in_43120985 AS hs_time_in_43120985,
-  properties.hs_time_in_51791469 AS hs_time_in_51791469,
+  properties.hs_time_in_29374211 AS hs_time_in_payment_link_sent,
+  properties.hs_time_in_29374212 AS hs_time_in_payment_completed,
+  properties.hs_time_in_29398334 AS hs_time_in_new_package_payment_done,
+  properties.hs_time_in_29426996 AS hs_time_in_cx_tutor_matchmaking,
+  properties.hs_time_in_29426997 AS hs_time_in_cx_group_created,
+  properties.hs_time_in_29426998 AS `hs_time_in_completed_&_renewed`,
+  properties.hs_time_in_29426999 AS hs_time_in_new_package_payment_link_sent,
+  properties.hs_time_in_29437250 AS hs_time_in_package_in_Progress,
+  properties.hs_time_in_31024232 AS hs_time_in_lead_lost,
+  properties.hs_time_in_31140490 AS hs_time_in_lead_handed_over_to_sales,
+  properties.hs_time_in_31779640 AS hs_time_in_sale_group_created,
+  properties.hs_time_in_31814290 AS hs_time_in_chat_initiated_on_wa,
+  properties.hs_time_in_33062318 AS hs_time_in_trial_session_payment_link_sent,
+  properties.hs_time_in_34384521 AS hs_time_in_due_collection,
+  properties.hs_time_in_34384522 AS hs_time_in_due_renewal,
+  properties.hs_time_in_34885685 AS hs_time_in_blocked_packages,
+  properties.hs_time_in_34885686 AS hs_time_in_frozen_packages,
+  properties.hs_time_in_34885704 AS hs_time_in_cancelled_packages,
+  properties.hs_time_in_36859269 AS `hs_time_in_trial_session_scheduled`,
+  properties.hs_time_in_43120985 AS `hs_time_in_pending_package_start_retained_clients`,
+  properties.hs_time_in_51791469 AS `hs_time_in_completed_&_didnt_renew`,
   properties.hs_time_in_72409906 AS hs_time_in_72409906,
   properties.hs_time_in_72409907 AS hs_time_in_72409907,
   properties.hs_time_in_72409908 AS hs_time_in_72409908,
   properties.hs_time_in_72409911 AS hs_time_in_72409911,
   properties.hs_time_in_74424719 AS hs_time_in_74424719,
-  properties.hs_time_in_79322152 AS hs_time_in_79322152,
-  properties.hs_time_in_79359529 AS hs_time_in_79359529,
+  properties.hs_time_in_79322152 AS hs_time_in_postponed_leads,
+  properties.hs_time_in_79359529 AS hs_time_in_sale_tutor_matchmaking,
   properties.hs_time_in_81316419 AS hs_time_in_81316419,
-  properties.hs_time_in_93850911 AS hs_time_in_93850911,
+  properties.hs_time_in_93850911 AS hs_time_in_automatic_ts_payment_complete,
   properties.hs_time_in_98674320 AS hs_time_in_98674320,
   properties.hs_time_in_98748761 AS hs_time_in_98748761,
-  properties.hs_time_in_appointmentscheduled AS hs_time_in_appointmentscheduled,
+  properties.hs_time_in_appointmentscheduled AS hs_time_in_new_leads,
   properties.hs_time_in_closedlost AS hs_time_in_closedlost,
-  properties.hs_time_in_closedwon AS hs_time_in_closedwon,
+  properties.hs_time_in_closedwon AS hs_time_in_call_back,
   properties.hs_time_in_contractsent AS hs_time_in_contractsent,
   properties.hs_time_in_decisionmakerboughtin AS hs_time_in_decisionmakerboughtin,
-  properties.hs_time_in_presentationscheduled AS hs_time_in_presentationscheduled,
-  properties.hs_time_in_qualifiedtobuy AS hs_time_in_qualifiedtobuy,
+  properties.hs_time_in_presentationscheduled AS hs_time_in_last_followup_message,
+  properties.hs_time_in_qualifiedtobuy AS `hs_time_in_1st_call_NA`,
   properties.hs_unique_creation_key AS hs_unique_creation_key,
   properties.hs_updated_by_user_id AS hs_updated_by_user_id,
   properties.hs_user_ids_of_all_notification_followers AS hs_user_ids_of_all_notification_followers,
   properties.hs_user_ids_of_all_notification_unfollowers AS hs_user_ids_of_all_notification_unfollowers,
   properties.hs_user_ids_of_all_owners AS hs_user_ids_of_all_owners,
-  properties.hs_v2_cumulative_time_in_appointmentscheduled AS hs_v2_cumulative_time_in_appointmentscheduled,
-  properties.hs_v2_cumulative_time_in_closedwon AS hs_v2_cumulative_time_in_closedwon,
-  properties.hs_v2_cumulative_time_in_presentationscheduled AS hs_v2_cumulative_time_in_presentationscheduled,
-  properties.hs_v2_cumulative_time_in_qualifiedtobuy AS hs_v2_cumulative_time_in_qualifiedtobuy,
-  properties.hs_v2_date_entered_appointmentscheduled AS hs_v2_date_entered_appointmentscheduled,
-  properties.hs_v2_date_entered_closedwon AS hs_v2_date_entered_closedwon,
-  properties.hs_v2_date_entered_presentationscheduled AS hs_v2_date_entered_presentationscheduled,
-  properties.hs_v2_date_entered_qualifiedtobuy AS hs_v2_date_entered_qualifiedtobuy,
-  properties.hs_v2_date_exited_appointmentscheduled AS hs_v2_date_exited_appointmentscheduled,
-  properties.hs_v2_date_exited_closedwon AS hs_v2_date_exited_closedwon,
-  properties.hs_v2_date_exited_presentationscheduled AS hs_v2_date_exited_presentationscheduled,
-  properties.hs_v2_date_exited_qualifiedtobuy AS hs_v2_date_exited_qualifiedtobuy,
-  properties.hs_v2_latest_time_in_appointmentscheduled AS hs_v2_latest_time_in_appointmentscheduled,
-  properties.hs_v2_latest_time_in_closedwon AS hs_v2_latest_time_in_closedwon,
-  properties.hs_v2_latest_time_in_presentationscheduled AS hs_v2_latest_time_in_presentationscheduled,
-  properties.hs_v2_latest_time_in_qualifiedtobuy AS hs_v2_latest_time_in_qualifiedtobuy,
+  properties.hs_v2_cumulative_time_in_appointmentscheduled AS hs_v2_cumulative_time_in_new_leads,
+  properties.hs_v2_cumulative_time_in_closedwon AS hs_v2_cumulative_time_in_call_back,
+  properties.hs_v2_cumulative_time_in_presentationscheduled AS hs_v2_cumulative_time_in_last_followup_message,
+  properties.hs_v2_cumulative_time_in_qualifiedtobuy AS `hs_v2_cumulative_time_in_1st_call_NA`,
+  properties.hs_v2_date_entered_appointmentscheduled AS hs_v2_date_entered_new_leads,
+  properties.hs_v2_date_entered_closedwon AS hs_v2_date_entered_call_back,
+  properties.hs_v2_date_entered_presentationscheduled AS hs_v2_date_entered_last_followup_message,
+  properties.hs_v2_date_entered_qualifiedtobuy AS `hs_v2_date_entered_1st_call_NA`,
+  properties.hs_v2_date_exited_appointmentscheduled AS hs_v2_date_exited_new_leads,
+  properties.hs_v2_date_exited_closedwon AS hs_v2_date_exited_call_back,
+  properties.hs_v2_date_exited_presentationscheduled AS hs_v2_date_exited_last_followup_message,
+  properties.hs_v2_date_exited_qualifiedtobuy AS `hs_v2_date_exited_1st_call_NA`,
+  properties.hs_v2_latest_time_in_appointmentscheduled AS hs_v2_latest_time_in_new_leads,
+  properties.hs_v2_latest_time_in_closedwon AS hs_v2_latest_time_in_call_back,
+  properties.hs_v2_latest_time_in_presentationscheduled AS hs_v2_latest_time_in_last_followup_message,
+  properties.hs_v2_latest_time_in_qualifiedtobuy AS `hs_v2_latest_time_in_1st_call_NA`,
   properties.hs_was_imported AS hs_was_imported,
   properties.hubspot_owner_assigneddate AS hubspot_owner_assigneddate,
   properties.hubspot_owner_id AS hubspot_owner_id,
