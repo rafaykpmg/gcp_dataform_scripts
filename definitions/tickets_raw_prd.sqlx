@@ -22,6 +22,7 @@ MAX(case_status) AS case_status,
 MAX(client_solution_type) AS client_solution_type,
 MAX(TIMESTAMP_ADD(closed_date, INTERVAL 3 hour)) AS closed_date,
 MAX(closing_sales_owner) AS closing_sales_owner,
+MAX(c.name) AS closing_agent,
 MAX(complainee) AS complainee,
 MAX(created_by) AS created_by,
 MAX(createdate) AS createdate,
@@ -178,6 +179,8 @@ FROM
   ${ref('hubspot_tickets_raw_dataform')} a
   left join al-gooru.raw.hubspot_tickets_association b
   using(ticket_id)
+    left join al-gooru.staging.hubspot_internal_id_gsheet c
+  on a.closing_agent = c.hubspot_id
 GROUP BY
   1,
   2
