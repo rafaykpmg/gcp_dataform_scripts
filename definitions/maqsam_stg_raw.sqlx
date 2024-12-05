@@ -1,0 +1,46 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "hubspot_maqsam_completed_calls_raw_dataform",
+    tags:["internal_dashboard"]
+}
+with maqsam_cte as (
+select 
+FORMAT_TIMESTAMP('%Y-%m-%d %H:%M', timestamp_seconds(timestamp)) as tm,id,caller,callee,callerNumber,calleeNumber,state,direction,type,timestamp,duration as mq_duration, lower(a.name) as agent_name, a.email as agent_email
+from
+`al-gooru.Maqsam.calls`, unnest(agents) as a
+where state = 'completed'
+)
+
+,  hubspot_cte as (
+select 
+FORMAT_TIMESTAMP('%Y-%m-%d %H:%M', timestamp_millis(engagement_timestamp)) as engagement_timestamp_v1,timestamp_millis(engagement_createdAt) as engagement_createdAt_v1, engagement_id, engagement_type, associations_contactIds, associations_dealIds, engagement_bodyPreview, metadata_toNumber, metadata_fromNumber, metadata_body, metadata_status, safe_divide(metadata_durationMilliseconds,1000) as hs_duration, engagement_ownerId as agent_id
+from `al-gooru.staging.hubspot_engagements`
+where  engagement_type = 'CALL' and metadata_status = 'COMPLETED' 
+)
+
+, hubspot_cte_v1 as (
+  select a.*, b.ownerId as id_sales_table, lower(b.name) as sales_agent_name_id
+  from hubspot_cte a 
+  left join `al-gooru.staging.id_sales_agents` b
+  on cast(a.agent_id as string) = b.ownerId
+)
+
+, final_cte as (
+select coalesce(b.id, ba.id) as call_id_maqsam ,a.*, b.* except(id)
+, case when sales_agent_name_id is not null then 'sales_agent' else 'NA' end as tag
+from hubspot_cte_v1 a
+left join maqsam_cte b
+on (a.engagement_timestamp_v1 = b.tm) and (b.callee = a.metadata_toNumber) and (b.callerNumber = a.metadata_fromNumber) and (a.hs_duration = b.mq_duration)
+left join maqsam_cte ba
+on (a.engagement_timestamp_v1 = ba.tm) and (ba.callee = a.metadata_toNumber) and (ba.callerNumber = a.metadata_fromNumber) and (a.hs_duration = ba.mq_duration) and (a.sales_agent_name_id like ('%ba.agent_name%'))
+where b.tm is not null or ba.tm is not null
+)
+
+, abc_cte as (
+select call_id_maqsam, associations_dealIds, ARRAY_LENGTH(associations_dealIds) > 2 AS has_more_than_two_values 
+from final_cte
+)
+
+select * from final_cte
+where call_id_maqsam not in (select call_id_maqsam from abc_cte where has_more_than_two_values = true)
