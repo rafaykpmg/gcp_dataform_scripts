@@ -67,7 +67,8 @@ on a.hs_id = cast(b.hs_id as int64) and
 )
 
 
-select a.*, 
+select a.* except(contract_type), 
+case when a.contract_type is null then 'freelance' else a.contract_type end as contract_type,
 case 
 when a.sessionType = 'online' then b.online
 when a.sessionType = 'offline' then b.offline
