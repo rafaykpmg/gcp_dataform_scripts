@@ -6,6 +6,7 @@ config {
     tags:["internal_dashboard"]
 }
 
+with cte as (
 select
 a.id,
 a.created_at,
@@ -39,11 +40,39 @@ a.is_reviewed,
 a.deleted_at,
 a.deleted_by,
 a.is_last_session,
-a.client_feedback
+a.client_feedback,
+b.tutor_id as hs_id, 
+c.nameEn as subject_name
 from
 ${ref('id_completedsessions_raw_dataform')} a
+left join ${ref('hubspot_approvedtutor_prod_dataform')} b 
+on a.tutor_id = b.internal_dashboard_id
+left join ${ref('id_subjects_raw_dataform')} c 
+on a.subjectId = c.id
 -- left join ${ref('id_tutors_raw_dataform')} b on a.tutor_id = b.id
 -- left join ${ref('id_users_raw_dataform')} c on c.id = b.userId
 -- left join ${ref('id_subjects_raw_dataform')} d on a.subjectId = d.id
 -- left join ${ref('id_admins_raw_dataform')} e on a.verifierAdminId = e.id 
 where a.studentfullname not like ('%Test%') and a.studentfullname not like ('%test%')
+)
+
+, final_cte as (
+select 
+a.*, 
+b.contract_type
+from cte a
+left join ${ref('ftt_pftt_tutor_list')} b
+on a.hs_id = cast(b.hs_id as int64) and 
+(a.sessionDate between cast(b.start_date as date) and cast(b.end_date as date)) and b.session_type = a.sessionType
+)
+
+
+select a.*, 
+case 
+when a.sessionType = 'online' then b.online
+when a.sessionType = 'offline' then b.offline
+end as hourly_pftt_price
+from final_cte a
+left join `al-gooru.TC_Ops.contract_price_card` b
+on a.contract_type = b.contract_type 
+and (a.sessionDate between cast(b.start_date as date) and cast(b.end_date as date))
