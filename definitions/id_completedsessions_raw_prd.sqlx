@@ -42,8 +42,8 @@ a.is_last_session,
 a.client_feedback
 from
 ${ref('id_completedsessions_raw_dataform')} a
-left join ${ref('id_tutors_raw_dataform')} b on a.tutor_id = b.id
-left join ${ref('id_users_raw_dataform')} c on c.id = b.userId
-left join ${ref('id_subjects_raw_dataform')} d on a.subjectId = d.id
-left join ${ref('id_admins_raw_dataform')} e on a.verifierAdminId = e.id 
+-- left join ${ref('id_tutors_raw_dataform')} b on a.tutor_id = b.id
+-- left join ${ref('id_users_raw_dataform')} c on c.id = b.userId
+-- left join ${ref('id_subjects_raw_dataform')} d on a.subjectId = d.id
+-- left join ${ref('id_admins_raw_dataform')} e on a.verifierAdminId = e.id 
 where a.studentfullname not like ('%Test%') and a.studentfullname not like ('%test%')

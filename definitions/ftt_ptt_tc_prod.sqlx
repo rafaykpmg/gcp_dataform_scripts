@@ -46,7 +46,7 @@ SELECT
     ELSE NULL
     END AS end_date
     ,lower(contract_type) as contract_type
-    ,session_type
+    ,lower(session_type) as session_type
     ,hourly_limit
 
     from ftt_cte
