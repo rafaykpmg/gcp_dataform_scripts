@@ -1,8 +1,8 @@
 config {
     type: "table",
     schema: "raw",
-    name: "ftt_pftt_tutor_list"
-    tag: "expenses_finance"
+    name: "ftt_pftt_tutor_list",
+    tags: ["expenses_finance"]
 }
 with ftt_cte as (
 Select 
