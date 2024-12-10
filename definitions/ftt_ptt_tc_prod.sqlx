@@ -1,0 +1,52 @@
+config {
+    type: "table",
+    schema: "raw",
+    name: "ftt_pftt_tutor_list"
+}
+with ftt_cte as (
+Select 
+    *
+     from al-gooru.TC_Ops.senior_ftt_list
+
+union all
+
+Select 
+    *
+     from al-gooru.TC_Ops.trusted_ftt_list
+
+union all
+
+Select 
+    *
+     from al-gooru.TC_Ops.trusted_ptt_list
+
+union all
+
+Select 
+    *
+     from al-gooru.TC_Ops.exploratory_list
+
+union all
+
+Select 
+    *
+     from al-gooru.TC_Ops.archived_list
+)
+
+SELECT 
+    lower(tutor_name) AS tutor_name
+    ,hs_id
+    ,lower(algooru_email) AS algooru_email
+    ,lower(personal_email) as personal_email
+    ,FORMAT_DATE('%Y-%m-%d', start_date) AS start_date
+    ,CASE
+    WHEN start_date IS NOT NULL AND end_date IS NOT NULL THEN FORMAT_DATE('%Y-%m-%d', end_date)
+    WHEN start_date IS NOT NULL AND end_date IS NULL THEN '2099-01-01'
+    ELSE NULL
+    END AS end_date
+    ,lower(contract_type) as contract_type
+    ,session_type
+    ,hourly_limit
+
+    from ftt_cte
+    where tutor_name is not null 
