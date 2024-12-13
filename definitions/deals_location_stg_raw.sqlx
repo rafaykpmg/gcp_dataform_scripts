@@ -15,7 +15,7 @@ WITH raw_data AS (
     FROM
         al-gooru.staging.hubspot_deals
         where properties.prospect_location is not null
-        and properties.prospect_location LIKE 'http%'
+        and properties.prospect_location LIKE 'https://www.google.com/maps/place/%'
         --limit 1000
 )
 
@@ -31,7 +31,7 @@ WITH raw_data AS (
         --prospect_location IS NOT NULL AND 
         -- prospect_location LIKE 'http%' and
             
-        created_at =DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY) --and created_at < DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)
+        created_at <=DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY) --and created_at < DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)
 ),
 
 unique_deals AS (

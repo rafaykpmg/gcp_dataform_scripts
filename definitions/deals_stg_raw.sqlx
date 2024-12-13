@@ -337,12 +337,12 @@ END
   NULL
 END
   AS hs_date_entered_136573367,
-  CASE
-    WHEN properties.hs_date_entered_147755151 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_147755151 ))
-  ELSE
-  NULL
-END
-  AS hs_date_entered_147755151,
+--   CASE
+--     WHEN properties.hs_date_entered_147755151 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_147755151 ))
+--   ELSE
+--   NULL
+-- END
+--   AS hs_date_entered_147755151,
   CASE
     WHEN properties.hs_date_entered_147868163 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_147868163 ))
   ELSE
@@ -523,18 +523,18 @@ END
   NULL
 END
   AS hs_date_entered_72409908,
-  CASE
-    WHEN properties.hs_date_entered_72409911 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', CAST(properties.hs_date_entered_72409911 AS string)))
-  ELSE
-  NULL
-END
-  AS hs_date_entered_72409911,
-  CASE
-    WHEN properties.hs_date_entered_74424719 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_74424719 ))
-  ELSE
-  NULL
-END
-  AS hs_date_entered_74424719,
+--   CASE
+--     WHEN properties.hs_date_entered_72409911 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', CAST(properties.hs_date_entered_72409911 AS string)))
+--   ELSE
+--   NULL
+-- END
+--   AS hs_date_entered_72409911,
+--   CASE
+--     WHEN properties.hs_date_entered_74424719 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_74424719 ))
+--   ELSE
+--   NULL
+-- END
+--   AS hs_date_entered_74424719,
   CASE
     WHEN properties.hs_date_entered_79322152 IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.hs_date_entered_79322152 ))
   ELSE
@@ -586,7 +586,7 @@ END
   properties.hs_date_exited_136573365 AS hs_date_exited_136573365,
   properties.hs_date_exited_136573366 AS hs_date_exited_136573366,
   properties.hs_date_exited_136573367 AS hs_date_exited_136573367,
-  properties.hs_date_exited_147755151 AS hs_date_exited_147755151,
+  -- properties.hs_date_exited_147755151 AS hs_date_exited_147755151,
   properties.hs_date_exited_147868163 AS hs_date_exited_147868163,
   properties.hs_date_exited_147868164 AS hs_date_exited_147868164,
   properties.hs_date_exited_147868165 AS hs_date_exited_147868165,
@@ -618,8 +618,8 @@ END
   properties.hs_date_exited_72409906 AS hs_date_exited_web_form_submitted,
   properties.hs_date_exited_72409907 AS hs_date_exited_72409907,
   properties.hs_date_exited_72409908 AS hs_date_exited_72409908,
-  properties.hs_date_exited_72409911 AS hs_date_exited_72409911,
-  properties.hs_date_exited_74424719 AS hs_date_exited_74424719,
+  -- properties.hs_date_exited_72409911 AS hs_date_exited_72409911,
+  -- properties.hs_date_exited_74424719 AS hs_date_exited_74424719,
   properties.hs_date_exited_79322152 AS hs_date_exited_postponed_leads,
   properties.hs_date_exited_79359529 AS hs_date_exited_sale_tutor_matchmaking,
   properties.hs_date_exited_81316419 AS hs_date_exited_web_lead_lost,
@@ -689,7 +689,7 @@ END
   CAST(((CAST(properties.hs_time_in_136573365 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_136573365,
   CAST(((CAST(properties.hs_time_in_136573366 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_136573366,
   CAST(((CAST(properties.hs_time_in_136573367 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_136573367,
-  CAST(((CAST(properties.hs_time_in_147755151 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_147755151,
+  -- CAST(((CAST(properties.hs_time_in_147755151 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_147755151,
   CAST(((CAST(properties.hs_time_in_147868163 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_147868163,
   CAST(((CAST(properties.hs_time_in_147868164 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_147868164,
   CAST(((CAST(properties.hs_time_in_147868165 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_147868165,
@@ -721,8 +721,8 @@ END
   CAST(((CAST(properties.hs_time_in_72409906 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_web_form_submitted,
   CAST(((CAST(properties.hs_time_in_72409907 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_72409907,
   CAST(((CAST(properties.hs_time_in_72409908 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_72409908,
-  CAST(((CAST(properties.hs_time_in_72409911 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_72409911,
-  CAST(((CAST(properties.hs_time_in_74424719 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_74424719,
+  -- CAST(((CAST(properties.hs_time_in_72409911 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_72409911,
+  -- CAST(((CAST(properties.hs_time_in_74424719 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_74424719,
   CAST(((CAST(properties.hs_time_in_79322152 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_postponed_leads,
   CAST(((CAST(properties.hs_time_in_79359529 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_sale_tutor_matchmaking,
   CAST(((CAST(properties.hs_time_in_81316419 AS INT64) / 1000) / 60) as int64)  AS hs_time_in_web_lead_lost,
