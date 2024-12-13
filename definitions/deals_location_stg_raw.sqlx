@@ -1,0 +1,51 @@
+config {
+    type : 'incremental',
+    name : 'hubspot_locations_raw_dataform',
+    schema : 'raw',
+    protected : true ,
+    uniqueKey : ['deal_id']
+}
+
+WITH raw_data AS (
+    SELECT
+        CAST(id AS INT64) AS deal_id,
+        properties.prospect_location,
+        --format_timestamp('%Y/%m/%d',TIMESTAMP_MICROS(CAST(created_at/1000 AS int64))) AS created_at
+        CAST(TIMESTAMP_MICROS(CAST(created_at/1000 AS int64)) as DATE) AS created_at
+    FROM
+        al-gooru.staging.hubspot_deals
+        where properties.prospect_location is not null
+        and properties.prospect_location LIKE 'http%'
+        --limit 1000
+)
+
+,filtered_data AS (
+    SELECT
+        deal_id,
+        prospect_location,
+        created_at,
+        ROW_NUMBER() OVER (PARTITION BY deal_id ORDER BY created_at DESC) AS row_num
+    FROM
+        raw_data
+    WHERE
+        --prospect_location IS NOT NULL AND 
+        -- prospect_location LIKE 'http%' and
+            
+        created_at =DATE_SUB(CURRENT_DATE, INTERVAL 2 DAY) --and created_at < DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)
+),
+
+unique_deals AS (
+    SELECT
+        deal_id,
+        prospect_location
+        --,created_at
+    FROM
+        filtered_data
+    WHERE
+        row_num = 1
+)
+
+SELECT
+    *
+FROM
+    unique_deals
