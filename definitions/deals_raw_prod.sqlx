@@ -57,6 +57,7 @@ WITH
     MAX(createdate) AS createdate,
     MAX(curriculum) AS curriculum,
     MAX(curriculum__new_) AS curriculum__new_,
+    MAX(curriculums_new) AS curriculums_new,
     MAX(cx_churned_at) AS cx_churned_at,
     MAX(cx_group_created_at) AS cx_group_created_at,
     MAX(cx_pending_group_at) AS cx_pending_group_at,

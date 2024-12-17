@@ -125,6 +125,7 @@ END
   AS createdate,
   properties.curriculum AS curriculum,
   properties.curriculum__new_ AS curriculum__new_,
+  properties.curriculums_new AS curriculums_new,
   CASE
     WHEN properties.cx_churned_at IS NOT NULL THEN FORMAT_TIMESTAMP('%F %X', SAFE.PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', properties.cx_churned_at ))
   ELSE
