@@ -18,8 +18,19 @@ archived,
 archived_at,
 associations,
 age,
-(cast(applicant_to_approved_tutor_time as int64) / 1000.0 / 60.0 / 60.0) AS applicant_to_approved_tutor_time_hours,
-(cast(applicant_to_approved_tutor_time as int64)/ 1000.0 / 60.0 / 60.0 / 24.0 / 30.44) AS applicant_to_approved_tutor_time_months,
+CASE 
+    WHEN applicant_to_approved_tutor_time IS NOT NULL AND applicant_to_approved_tutor_time != '' 
+    THEN (CAST(applicant_to_approved_tutor_time AS INT64) / 1000.0 / 60.0 / 60.0) 
+    ELSE NULL 
+END AS applicant_to_approved_tutor_time_hours,
+
+CASE 
+    WHEN applicant_to_approved_tutor_time IS NOT NULL AND applicant_to_approved_tutor_time != '' 
+    THEN (CAST(applicant_to_approved_tutor_time AS INT64) / 1000.0 / 60.0 / 60.0 / 24.0 / 30.44) 
+    ELSE NULL 
+END AS applicant_to_approved_tutor_time_months,
+-- (cast(applicant_to_approved_tutor_time as int64) / 1000.0 / 60.0 / 60.0) AS applicant_to_approved_tutor_time_hours,
+-- (cast(applicant_to_approved_tutor_time as int64)/ 1000.0 / 60.0 / 60.0 / 24.0 / 30.44) AS applicant_to_approved_tutor_time_months,
 -- TIMESTAMP_MICROS(CAST(applicant_to_approved_tutor_time/1000 AS int64)) AS applicant_to_approved_tutor_time,
 -- applicant_to_approved_tutor_time,
 application_note_attachment_type,
