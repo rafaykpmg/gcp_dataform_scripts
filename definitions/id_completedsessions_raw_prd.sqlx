@@ -63,7 +63,7 @@ b.contract_type
 from cte a
 left join ${ref('ftt_pftt_tutor_list')} b
 on a.hs_id = cast(b.hs_id as int64) and 
-(a.sessionDate between cast(b.start_date as date) and cast(b.end_date as date)) and b.session_type = a.sessionType
+(a.sessionDate between cast(b.start_date as date) and cast(b.end_date as date)) and (b.session_type = a.sessionType OR (b.session_type = 'both' AND a.sessionType IN ('online', 'offline')))
 )
 
 
