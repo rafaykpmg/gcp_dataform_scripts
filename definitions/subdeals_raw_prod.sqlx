@@ -139,9 +139,25 @@ GROUP BY
   2
 )
 
-
+, final_cte as (
 select a.*,CAST(b.associated_deal_id AS INT64) as associated_deal_id,
-CAST( b.associated_approved_tutor_id AS INT64) as  associated_approved_tutor_id
+CAST( b.associated_approved_tutor_id AS INT64) as  associated_approved_tutor_id, c.contract_type
 from cte a
 left join `al-gooru.raw.association_subdeals_hubspot` b
 on a.subdeal_id = CAST(b.subdeal_id AS INT64)
+left join ${ref('ftt_pftt_tutor_list')} c
+on b.associated_approved_tutor_id = c.hs_id and 
+(date(a.created_at) between cast(c.start_date as date) and cast(c.end_date as date)) and (c.session_type = a.session_type OR (c.session_type = 'both' AND a.session_type IN ('online', 'inPerson')))
+)
+
+
+select a.* except(contract_type), 
+case when a.contract_type is null then 'freelance' else a.contract_type end as contract_type,
+case 
+when a.session_type = 'online' then b.online
+when a.session_type = 'inPerson' then b.offline
+end as hourly_pftt_price
+from final_cte a
+left join `al-gooru.TC_Ops.contract_price_card` b
+on a.contract_type = b.contract_type 
+and (date(a.created_at) between cast(b.start_date as date) and cast(b.end_date as date))
