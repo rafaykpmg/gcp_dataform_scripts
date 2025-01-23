@@ -336,6 +336,23 @@ id as event_id, anonymous_id as user_id, event as event_name, timestamp, session
       type AS type
     )) AS json
 from `al-gooru.website_dev.sign_up_flow_tutoring_type_selected`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    session_type as session_type
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_session_type_selected`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+    null as NA
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_no_tutor_found`
+
 
 
 
