@@ -354,6 +354,7 @@ SELECT
   message,
   numemployees,
   photo,
-  website
+  website,
+  sales_referral_code
 FROM
   al-gooru.staging.hubspot_contacts
