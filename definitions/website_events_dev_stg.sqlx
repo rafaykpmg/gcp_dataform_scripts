@@ -56,12 +56,14 @@ context_page_path as page_source
     )) AS json
 from `al-gooru.website_dev.sign_up_flow_sub_levels_screen`
 union all
-select id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
   TO_JSON_STRING(
     STRUCT(
       sub_level AS sub_level,
+          coalesce(subject_name,"NA") AS subject_name,
         coalesce(context_campaign_source,"NA") AS context_source,
-context_page_path as page_source
+        context_page_path as page_source
     )) AS json
 from `al-gooru.website_dev.sign_up_flow_sub_level_selected`
 union all
@@ -316,6 +318,25 @@ id as event_id, anonymous_id as user_id, event as event_name, timestamp, null as
         null as NA
     )) AS json
 from `al-gooru.website_dev.sign_up_flow_self_checkout_payment_failed`
+union all
+-- New Addition after new self checkout flow
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+      level AS level,
+      grade AS grade
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_educational_level_selected`
+union all
+select 
+id as event_id, anonymous_id as user_id, event as event_name, timestamp, session_id,
+  TO_JSON_STRING(
+    STRUCT(
+      type AS type
+    )) AS json
+from `al-gooru.website_dev.sign_up_flow_tutoring_type_selected`
+
 
 
 
