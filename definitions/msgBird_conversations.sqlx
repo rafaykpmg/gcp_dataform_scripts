@@ -1,0 +1,78 @@
+config {
+    type : 'incremental',
+    name : 'conversation_messages',
+    schema : 'messagebird',
+    protected : true ,
+    uniqueKey : ['id']
+}
+with max_cte as (
+SELECT 
+  coalesce(DATE_SUB(CAST(MAX(PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', updatedDatetime)) AS DATE), INTERVAL 1 DAY),Date('1900-01-01')) 
+  AS maxDate
+ from ${self()}
+)
+, ExtractedData AS (
+  SELECT 
+    id,
+    CAST(contact AS INT64) AS contact,
+    createdDatetime,
+    updatedDatetime,
+    CASE  
+      WHEN JSON_EXTRACT_SCALAR(item, '$.type') = 'hsm' THEN (
+        SELECT STRING_AGG(JSON_EXTRACT_SCALAR(parameter, '$.text'), '\n')
+        FROM UNNEST(JSON_EXTRACT_ARRAY(item, '$.content.hsm.components')) AS component_data,
+             UNNEST(JSON_EXTRACT_ARRAY(component_data, '$.parameters')) AS parameter
+      )
+      when JSON_EXTRACT_SCALAR(item, '$.type') = 'interactive' then
+      JSON_EXTRACT_SCALAR(item, '$.content.interactive.reply.text')
+      ELSE JSON_EXTRACT_SCALAR(item, '$.content.text')
+    END AS text,
+    CASE 
+      WHEN JSON_EXTRACT_SCALAR(item, '$.direction') = 'sent' THEN 'Agent'
+      WHEN JSON_EXTRACT_SCALAR(item, '$.direction') = 'received' THEN 'Client'
+    END AS direction,
+    JSON_EXTRACT_SCALAR(item, '$.platform') AS platform,
+    CASE 
+    when JSON_EXTRACT_SCALAR(item, '$.type') = 'text' then 'text'
+    when JSON_EXTRACT_SCALAR(item, '$.type') = 'event' then 'event'
+    when JSON_EXTRACT_SCALAR(item, '$.type') = 'interactive' then 'interactive'
+    else JSON_EXTRACT_SCALAR(item, '$.content.hsm.templateName')
+    END AS templateName,
+    JSON_EXTRACT_SCALAR(item, '$.createdDatetime') AS createDatetime,
+    messages_count
+  FROM 
+    `al-gooru.messagebird.conversations`,
+    UNNEST(JSON_EXTRACT_ARRAY(messages)) AS item
+  WHERE 
+    JSON_EXTRACT_SCALAR(item, '$.type') IN ('text', 'hsm','event','interactive')
+    and CAST(PARSE_TIMESTAMP('%Y-%m-%dT%H:%M:%E*SZ', updatedDatetime) AS DATE) >= (select maxDate from max_cte)
+    -- AND id = 'a62bd63505ed459590c9f2f91db3cd5d'
+),
+ConcatenatedMessages AS (
+  SELECT
+    id,
+    contact,
+    createdDatetime,
+    updatedDatetime,
+    messages_count,
+    STRING_AGG(
+      CONCAT(direction, ' : ', text), 
+      '\n'
+      ORDER BY createDatetime
+    ) AS full_conversation,
+    STRING_AGG(DISTINCT platform,'\n') AS platforms,
+    STRING_AGG(DISTINCT templateName ,'\n') AS template_names
+  FROM 
+    ExtractedData
+  GROUP BY id, contact, createdDatetime, updatedDatetime,messages_count
+)
+SELECT 
+  id,
+  contact,
+  createdDatetime,
+  updatedDatetime,
+  full_conversation,
+  platforms,
+  template_names
+FROM 
+  ConcatenatedMessages
