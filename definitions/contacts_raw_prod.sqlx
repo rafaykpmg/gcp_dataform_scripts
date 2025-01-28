@@ -354,7 +354,7 @@ SELECT
   MAX(numemployees) AS numemployees,
   MAX(photo) AS photo,
   MAX(website) AS website,
-  MAX(sales_referral_code) AS sales_referral_code,
+  MAX(sales_referral_code) AS sales_referral_code
 FROM
   ${ref('hubspot_contacts_raw_dataform')}
 GROUP BY

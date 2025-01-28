@@ -124,7 +124,7 @@ hs_time_in_2,
 hs_time_in_3,
 hs_time_in_4,
 hs_time_to_close_sla_at,
--- content,
+content,
 hs_all_accessible_team_ids,
 hs_all_owner_ids,
 hs_all_team_ids,
@@ -182,7 +182,9 @@ else tutor_matchmaking
 end as tutor_matchmaking_reason
 ,
 tutor_resolution_type,
-tutor_ticket_status
+tutor_ticket_status,
+tutor_replacement_category,
+tutor_replacement_reason
 from 
 al-gooru.staging.hubspot_ticket
 -- where closed_date != ""
