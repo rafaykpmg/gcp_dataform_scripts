@@ -206,6 +206,7 @@ END
   when properties.dealstage = '136573365' then 'trial_contract_sent'
   when properties.dealstage = '136573366' then 'trial_closed_won'
   when properties.dealstage = '136573367' then 'trial_closed_lost'
+  when properties.dealstage = '973825931' then 'incomplete_renewals'
   else null end AS dealstage,
   properties.dealtype AS dealtype,
   properties.description AS description,
