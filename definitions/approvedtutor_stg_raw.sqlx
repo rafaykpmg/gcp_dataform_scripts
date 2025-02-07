@@ -27,7 +27,8 @@ a.bank_address,
 a.bank_name,
 a.bio,
 a.categories,
-a.city,
+-- a.city,
+c.NameEn as city,
 a.coordinates,
 case 
 when a.country_of_residence = '816f04ac-0552-40dd-aa5e-abaa2d659de6' then "Saudi"
@@ -580,6 +581,6 @@ a.years_of_experience,
 b.id as internal_dashboard_id
 from
 `al-gooru.staging.hubspot_approvedtutors` a
-left join ${ref('id_tutors_prod_dataform')} b
-on a.id = b.approvedTutorHubspotId
+left join ${ref('id_tutors_prod_dataform')} b on a.id = b.approvedTutorHubspotId
+left join al-gooru.staging.id_countries c on c.id=a.city
 
