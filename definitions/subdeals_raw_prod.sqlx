@@ -131,7 +131,8 @@ max(tutor_status) AS tutor_status,
 max(tutoring_language) AS tutoring_language,
 max(unexecuted_hours) AS unexecuted_hours,
 max(whatsapp_group_link) AS whatsapp_group_link,
-max(scheduling_mode) as scheduling_mode
+max(scheduling_mode) as scheduling_mode,
+max(subject_levels) as subject_levels
 FROM
   ${ref('hubspot_subdeals_raw_dataform')}
 GROUP BY

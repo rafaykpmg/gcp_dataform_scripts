@@ -141,6 +141,7 @@ tutor_status,
 tutoring_language,
 unexecuted_hours,
 whatsapp_group_link,
-scheduling_mode
+scheduling_mode,
+subject_levels
 from
 al-gooru.staging.hubspot_subdeals
