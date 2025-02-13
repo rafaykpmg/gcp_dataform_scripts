@@ -7,19 +7,20 @@ config {
 }
 
 select
-CAST(id AS INT64) AS subdeal_id,
-TIMESTAMP_MICROS(CAST(created_at/1000 AS int64)) AS created_at,
+CAST(sd.id AS INT64) AS subdeal_id,
+TIMESTAMP_MICROS(CAST(sd.created_at/1000 AS int64)) AS created_at,
 properties_with_history,
-TIMESTAMP_MICROS(CAST(updated_at/1000 AS int64)) AS updated_at,
+TIMESTAMP_MICROS(CAST(sd.updated_at/1000 AS int64)) AS updated_at,
 case when trial_session_date is not null and trial_session_date <> '' then
 PARSE_DATE('%Y-%m-%d', trial_session_date)   end as trial_session_date,
-case 
-when subject = '18caf3aa-26d7-4ad7-952d-3ddd4404dde8' then 'foundational_arabic'
-when subject = '7bdea6ee-1e06-4c68-8493-71c823e092b4' then 'middle_school_math'
-when subject = '73335fb4-a548-4e19-8325-1ea018de78be' then 'foundational_english'
-when subject = '15c61ad2-8bc3-4eeb-9c05-99e542a62205' then 'daily_agenda_support'
-when subject = 'e8036965-3be1-402c-a88f-9c6a547fbab1' then 'elementary_math'
-else subject end as subject,
+-- case 
+-- when subject = '18caf3aa-26d7-4ad7-952d-3ddd4404dde8' then 'foundational_arabic'
+-- when subject = '7bdea6ee-1e06-4c68-8493-71c823e092b4' then 'middle_school_math'
+-- when subject = '73335fb4-a548-4e19-8325-1ea018de78be' then 'foundational_english'
+-- when subject = '15c61ad2-8bc3-4eeb-9c05-99e542a62205' then 'daily_agenda_support'
+-- when subject = 'e8036965-3be1-402c-a88f-9c6a547fbab1' then 'elementary_math'
+-- else subject end as subject,
+s.nameEn as subject,
 round(safe_divide(safe_cast(session_cost as float64) , 3.75),2) as session_cost,
 archived,
 archived_at,
@@ -142,6 +143,8 @@ tutoring_language,
 unexecuted_hours,
 whatsapp_group_link,
 scheduling_mode,
-subject_levels
+sl.Name_en as subject_levels
 from
-al-gooru.staging.hubspot_subdeals
+al-gooru.staging.hubspot_subdeals sd
+left join ${ref('id_subjects_raw_dataform')} s on s.id=sd.subject 
+left join al-gooru.staging.id_subject_levels sl on sd.subject_levels=sl.id

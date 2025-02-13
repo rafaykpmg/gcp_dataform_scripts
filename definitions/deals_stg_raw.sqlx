@@ -833,6 +833,7 @@ END
   properties.prospect_location AS prospect_location,
   properties.prospect_preferred_gender AS prospect_preferred_gender,
   properties.psa_initiated_created_at AS psa_initiated_created_at,
+  properties.package_self_checkout_link_generated AS package_self_checkout_link_generated,
   properties.recurring_revenue_amount AS recurring_revenue_amount,
   properties.recurring_revenue_deal_type AS recurring_revenue_deal_type,
   properties.recurring_revenue_inactive_date AS recurring_revenue_inactive_date,

@@ -430,6 +430,7 @@ WITH
     MAX(prospect_location) AS prospect_location,
     MAX(prospect_preferred_gender) AS prospect_preferred_gender,
     MAX(psa_initiated_created_at) AS psa_initiated_created_at,
+    MAX(package_self_checkout_link_generated) AS package_self_checkout_link_generated,
     MAX(recurring_revenue_amount) AS recurring_revenue_amount,
     MAX(recurring_revenue_deal_type) AS recurring_revenue_deal_type,
     MAX(recurring_revenue_inactive_date) AS recurring_revenue_inactive_date,
