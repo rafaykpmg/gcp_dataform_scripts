@@ -22,8 +22,10 @@ max(amount_paid_by_client) AS amount_paid_by_client,
 max(amount_paid_for_this_tutor) AS amount_paid_for_this_tutor,
 max(areas_of_improvements) AS areas_of_improvements,
 max(curriculum) AS curriculum,
+max(curriculums_new) AS curriculums_new,
 max(daily_agenda_subjects) AS daily_agenda_subjects,
-ARRAY_TO_STRING(ARRAY_AGG(concat(mt.name_en,' ',mt.subject_name)), '; ') AS daily_agenda_subjects_new,
+max(daily_agenda_subjects_new) AS daily_agenda_subjects_new,
+-- ARRAY_TO_STRING(ARRAY_AGG(concat(mt.name_en,' ',mt.subject_name)), '; ') AS daily_agenda_subjects_new,
 max(daily_agenda_subjects_dropdown) AS daily_agenda_subjects_dropdown,
 max(matchmaking_tutors) as matchmaking_tutors,
 max(matchmaking_started_timestamp) as matchmaking_started_timestamp,
@@ -137,8 +139,6 @@ max(scheduling_mode) as scheduling_mode,
 max(subject_levels) as subject_levels
 FROM
   ${ref('hubspot_subdeals_raw_dataform')} sd
-  left join ${ref('id_subjects_level_raw_dataform')} mt
-  ON mt.id IN UNNEST(SPLIT(daily_agenda_subjects_new, ';'))
 GROUP BY
   1,
   2

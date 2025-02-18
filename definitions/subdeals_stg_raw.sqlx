@@ -5,7 +5,7 @@ config {
     description: "Add 3 hours to all the timestamps",
     tags: ["subdeals_pipeline"]
 }
-
+with subdeal_cte as (
 select
 CAST(sd.id AS INT64) AS subdeal_id,
 TIMESTAMP_MICROS(CAST(sd.created_at/1000 AS int64)) AS created_at,
@@ -30,6 +30,7 @@ round(safe_divide(safe_cast(amount_paid_by_client as float64) , 3.75),2)  as amo
 amount_paid_for_this_tutor,
 areas_of_improvements,
 curriculum,
+curriculums_new,
 daily_agenda_subjects,
 daily_agenda_subjects__new_ as daily_agenda_subjects_new,
 daily_agenda_subjects__dropdown_ as daily_agenda_subjects_dropdown,
@@ -149,3 +150,12 @@ concat(sl.subject_name,' ',sl.name_en) as subject_levels
 from
 al-gooru.staging.hubspot_subdeals sd
 left join ${ref('id_subjects_level_raw_dataform')} sl on sd.subject_levels=sl.id
+)
+
+select 
+    a.* except(daily_agenda_subjects_new),
+    ARRAY_TO_STRING(ARRAY_AGG(concat(mt.name_en,' ',mt.subject_name)), '; ') AS daily_agenda_subjects_new,
+    from subdeal_cte a
+  left join ${ref('id_subjects_level_raw_dataform')} mt
+  ON mt.id IN UNNEST(SPLIT(daily_agenda_subjects_new, ';'))
+  group by all
