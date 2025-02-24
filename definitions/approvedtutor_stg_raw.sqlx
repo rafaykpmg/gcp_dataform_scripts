@@ -343,7 +343,7 @@ a.degree,
         WHEN a.district = '301e4377-dc1a-4def-abc2-d38a42a3f329' THEN 'الحزام الذهبي-الخبر'
         WHEN a.district = '568fd9ac-4ff1-4ea9-96b8-d15d08d87329' THEN 'الحزم-الخرمة'
         WHEN a.district = '5cf2ba45-d5e0-48bd-b2d4-e4e7c2d5995a' THEN 'الحزم-الرس'
-        ELSE a.district
+        ELSE d.NameEn
     END AS district,
 a.educational_levels,
 a.email,
@@ -582,5 +582,6 @@ b.id as internal_dashboard_id
 from
 `al-gooru.staging.hubspot_approvedtutors` a
 left join ${ref('id_tutors_prod_dataform')} b on a.id = b.approvedTutorHubspotId
-left join al-gooru.staging.id_countries c on c.id=a.city
+left join al-gooru.staging.id_countries c on c.id=a.city 
+left join al-gooru.staging.id_countries d on d.id=a.district 
 
