@@ -7,6 +7,7 @@ config {
 }
 SELECT
   CAST(id AS INT64) AS deal_id,
+  contacts,
   createdAt AS created_at,
   updatedAt AS updated_at,
   properties_additional_notes AS additional_notes,

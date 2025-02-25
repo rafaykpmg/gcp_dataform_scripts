@@ -46,7 +46,6 @@ MAX(hs_conversations_originating_message_id) AS hs_conversations_originating_mes
 MAX(hs_conversations_originating_thread_id) AS hs_conversations_originating_thread_id,
 MAX(hs_created_by_user_id) AS hs_created_by_user_id,
 MAX(hs_createdate) AS hs_createdate,
-MAX(properties_with_history) AS properties_with_history,
 MAX(hs_custom_inbox) AS hs_custom_inbox,
 MAX(hs_date_entered_1) AS hs_date_entered_1,
 MAX(hs_date_entered_109390109) AS hs_date_entered_109390109,

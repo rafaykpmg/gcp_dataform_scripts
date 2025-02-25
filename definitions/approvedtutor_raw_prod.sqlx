@@ -13,7 +13,6 @@ WITH
     created_at,
     MAX(updated_at) AS updated_at,
     MAX(phone_number) AS phone_number,
-    MAX(properties_with_history) AS properties_with_history,
     MAX(archived) AS archived,
     MAX(archived_at) AS archived_at,
     MAX(associations) AS associations,

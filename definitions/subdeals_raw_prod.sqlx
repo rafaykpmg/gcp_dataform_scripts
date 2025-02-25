@@ -10,7 +10,6 @@ with cte as (
 select
 subdeal_id,
 TIMESTAMP_ADD(sd.created_at, INTERVAL 3 hour) AS created_at,
-max(properties_with_history) AS properties_with_history,
 max(TIMESTAMP_ADD(sd.updated_at, INTERVAL 3 hour)) AS updated_at,
 max(archived) AS archived,
 max(subject) AS subject,

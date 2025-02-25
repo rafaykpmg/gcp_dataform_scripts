@@ -10,6 +10,7 @@ WITH
   cte AS (
   SELECT
     deal_id,
+    STRING_AGG(JSON_VALUE(contact), ', ')  AS associated_contact_id,
     TIMESTAMP_ADD(created_at, INTERVAL 3 hour) AS created_at,
     MAX(lower(pipeline)) AS pipeline,
     max(source) AS source,
@@ -565,10 +566,11 @@ WITH
     MAX(whatsapp_group_link_2) AS whatsapp_group_link_2,
     MAX(whatsapp_group_link_3) AS whatsapp_group_link_3
   FROM
-    ${ref('hubspot_deals_raw_dataform')}
+    ${ref('hubspot_deals_raw_dataform')}, 
+UNNEST(JSON_QUERY_ARRAY(contacts)) AS contact
   GROUP BY
     1,
-    2)
+    3)
 
 , ticket_cte as (
     select associated_deal_id, sum(cast(number_of_hours_refunded as float64)) as number_of_hours_refunded, 
@@ -580,16 +582,11 @@ WITH
 
   SELECT
     a.* except(subject_levels), coalesce(d.name_en,a.subject_levels) as subject_levels,
-    cast(b.associated_contact_id as int64) as associated_contact_id,
     round(safe_divide(amount_refunded , 3.75),2) AS amount_refunded_from_tickets,
     number_of_hours_refunded as number_of_hours_refunded_from_tickets,
     e.street_number as street_number_offline,e.route as route_offline,e.sublocality as sublocality_offline,e.city as city_offline,e.district as district_offline,e.state as state_offline,e.country as country_offline,e.postal_code as postal_code_offline,e.formatted_address as formatted_address_offline,e.latitude as latitude_offline,e.longitude as longitude_offline
   FROM
     cte a
-  LEFT JOIN
-    `al-gooru.raw.association_deal_hubspot` b
-  ON
-    a.deal_id= cast(b.deal_id as int64)
     left join ticket_cte c 
     on a.deal_id = c.associated_deal_id
   LEFT JOIN 
