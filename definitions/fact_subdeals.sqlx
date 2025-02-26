@@ -33,15 +33,15 @@ case when (b.amount_paid > 0) then 1 else 0 end AS converted_flag,
 count(distinct(c.subject)) as total_subjects,
 b.pipeline as pipeline,
 case when tag <> 'Freelance' and c.session_type = 'inPerson' then 1 else 0 end as wrong_session_type,
-case when tag <> 'Freelance' and c.executed_hours <> '0' and c.executed_hours is not null  and  not (c.session_cost between 0.27 and 0.5) then 1 
-when tag <> 'Freelance' and c.executed_hours <> '0' and c.executed_hours is not null and c.session_cost is null then 1
+case when tag <> 'Freelance' and c.executed_hours <> 0 and c.executed_hours is not null  and  not (c.session_cost between 0.27 and 0.5) then 1 
+when tag <> 'Freelance' and c.executed_hours <> 0 and c.executed_hours is not null and c.session_cost is null then 1
 else 0 end as wrong_session_cost,
   FROM
 
 ${ref('hubspot_subdeals_prod_dataform')} c 
 left join `al-gooru.production.dim_date` dd on DATE(c.created_at) = dd.Date
 left join ${ref('hubspot_deals_prod_dataform')} b on b.deal_id = c.associated_deal_id
-left join ${ref('hubspot_contacts_prod_dataform')} a on a.contact_id = b.associated_contact_id
+left join ${ref('hubspot_contacts_prod_dataform')} a on cast(a.contact_id as string) = b.associated_contact_id
 left join ${ref('hubspot_approvedtutor_prod_dataform')} d on c.associated_approved_tutor_id = d.tutor_id
 left join `al-gooru.bizops_dataset.Tutor_Details` f on c.tutor_name = f.tutor_id and date(b.created_at) between f.joining_date and f.end_date
 left join `al-gooru.production.id_subjects_prod_dataform` g
