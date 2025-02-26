@@ -24,4 +24,4 @@ SELECT
   chatbot_mb,
   is_active
 FROM
-  al-gooru.staging.id_subjects
+  al-gooru.hubspot.id_subjects

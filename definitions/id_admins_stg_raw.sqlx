@@ -16,4 +16,4 @@ isActive,
 created_at,
 updated_at
 from
-al-gooru.staging.id_admins
+al-gooru.hubspot.id_admins

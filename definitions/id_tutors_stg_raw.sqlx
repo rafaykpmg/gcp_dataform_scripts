@@ -68,4 +68,4 @@ other_major,
 is_subjects_ranked,
 show_schedule_reminder
 from
-al-gooru.staging.id_tutors
+al-gooru.hubspot.id_tutors

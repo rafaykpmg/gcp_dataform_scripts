@@ -32,5 +32,5 @@ safe_cast(package_length as float64) as package_length,
 hours_per_package_length_unit,
 package_length_unit
 from
-al-gooru.staging.id_packages
+al-gooru.hubspot.id_packages
 

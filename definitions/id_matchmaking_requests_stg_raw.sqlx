@@ -135,5 +135,5 @@ else subject_id end as subject_id,
 notification_id,
 is_pledged
 from
-`al-gooru.staging.id_matchmaking_requests`  a 
+`al-gooru.hubspot.id_matchmaking_requests`  a 
 left join `al-gooru.production.tutor_id_mapping_final` tmap on a.tutor_id = tmap.tutor_id 

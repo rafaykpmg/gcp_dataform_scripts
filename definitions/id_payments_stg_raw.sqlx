@@ -8,8 +8,8 @@ config {
 
 select
 id,
-TIMESTAMP_MICROS(CAST(created_at/1000 AS int64)) AS created_at,
-TIMESTAMP_MICROS(CAST(updated_at/1000 AS int64)) AS updated_at,
+created_at AS created_at,
+updated_at AS updated_at,
 lower(firstName) as firstname,
 lower(lastName) as lastname,
 email,
@@ -34,4 +34,4 @@ token_name,
 agreement_id,
 paid_by_apple,
 from
-al-gooru.staging.id_payments
+al-gooru.hubspot.id_payments

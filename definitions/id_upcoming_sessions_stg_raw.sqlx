@@ -30,6 +30,6 @@ a.updated_at,
 a.deleted_at,
 a.other_subject,
 from
-`al-gooru.staging.id_upcoming_sessions` a
-left join `al-gooru.staging.id_upcoming_session_time_slots` b 
+`al-gooru.hubspot.id_upcoming_sessions` a
+left join `al-gooru.hubspot.id_upcoming_session_time_slots` b 
 on a.id = b.upcoming_session_id

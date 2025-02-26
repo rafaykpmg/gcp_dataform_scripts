@@ -9,5 +9,5 @@ config {
 SELECT
   a.*,b.nameEn as subject_name
 FROM
-  al-gooru.staging.id_subject_levels a
+  al-gooru.hubspot.id_subject_levels a
   left join ${ref('id_subjects_raw_dataform')} b on a.subject_id=b.id

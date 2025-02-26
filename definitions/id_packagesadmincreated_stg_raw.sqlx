@@ -46,5 +46,5 @@ is_manual_installment,
 package_length,
 package_length_unit
 from
-al-gooru.staging.id_packagesadmincreated
+al-gooru.hubspot.id_packages_admin_created
 where lower(firstName) not like ('%test%') 

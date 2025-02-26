@@ -10,6 +10,6 @@ select a.id as tutor_id, concat(b.firstName," ",b.lastName) as tutor_name, conca
 d.internal_dashboard_id, e.nameEN as country_of_residence
 from `al-gooru.production.id_tutors_prod_dataform` a
 left join `al-gooru.production.id_users_prod_dataform` b on a.userid = b.id
-left join `al-gooru.staging.id_nationalities_mapping` c on a.nationalityId = c.id
-left join `al-gooru.staging.id_nationalities_mapping` e on a.countryId = e.id
+left join `al-gooru.hubspot.id_nationalities` c on a.nationalityId = c.id
+left join `al-gooru.hubspot.id_nationalities` e on a.countryId = e.id
 left join `al-gooru.production.hubspot_approvedtutor_prod_dataform` d on a.approvedTutorHubspotId = cast(d.tutor_id as string)

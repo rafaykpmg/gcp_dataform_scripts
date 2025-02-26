@@ -23,4 +23,4 @@ countryCode,
 app_version,
 payment_token_name
 from
-al-gooru.staging.id_users
+al-gooru.hubspot.id_users

@@ -41,5 +41,5 @@ deleted_by,
 is_last_session,
 client_feedback
 from
-`al-gooru.staging.id_completedsessions`
+`al-gooru.hubspot.id_completed_sessions`
 where deleted_at is null
