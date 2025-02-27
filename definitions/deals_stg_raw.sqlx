@@ -498,6 +498,7 @@ round(safe_divide(SAFE_CAST(properties_first_payment_amount__sales_ as float64) 
   properties_prospect_curriculum AS prospect_curriculum,
   properties_prospect_grade AS prospect_grade,
   properties_prospect_location AS prospect_location,
+  coalesce(properties_prospect_location,properties_address) AS prospect_location_offline,
   properties_prospect_preferred_gender AS prospect_preferred_gender,
   properties_psa_initiated_created_at AS psa_initiated_created_at,
   properties_package_self_checkout_link_generated AS package_self_checkout_link_generated,
