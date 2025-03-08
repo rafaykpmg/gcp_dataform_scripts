@@ -14,9 +14,15 @@ where state = 'completed'
 
 ,  hubspot_cte as (
 select 
-FORMAT_TIMESTAMP('%Y-%m-%d %H:%M', timestamp_millis(engagement_timestamp)) as engagement_timestamp_v1,timestamp_millis(engagement_createdAt) as engagement_createdAt_v1, engagement_id, engagement_type, associations_contactIds, associations_dealIds, engagement_bodyPreview, metadata_toNumber, metadata_fromNumber, metadata_body, metadata_status, safe_divide(metadata_durationMilliseconds,1000) as hs_duration, engagement_ownerId as agent_id
-from `al-gooru.staging.hubspot_engagements`
-where  engagement_type = 'CALL' and metadata_status = 'COMPLETED' 
+FORMAT_TIMESTAMP('%Y-%m-%d %H:%M', timestamp_millis(timestamp)) as engagement_timestamp_v1,
+timestamp_millis(createdAt) as engagement_createdAt_v1, id as engagement_id,type as engagement_type,
+ARRAY_AGG(JSON_VALUE(contact)) AS associations_contactIds
+,ARRAY_AGG(JSON_VALUE(deal))  AS associations_dealIds, bodyPreview as engagement_bodyPreview, metadata_toNumber, metadata_fromNumber, metadata_body, metadata_status, safe_divide(metadata_durationMilliseconds,1000) as hs_duration,OwnerId as agent_id
+from `al-gooru.hubspot.hubspot_engagements`,
+UNNEST(JSON_QUERY_ARRAY(associations_contactIds)) AS contact,
+UNNEST(JSON_QUERY_ARRAY(associations_dealIds)) AS deal
+where  type = 'CALL' and metadata_status = 'COMPLETED' 
+group by all
 )
 
 , hubspot_cte_v1 as (
@@ -43,4 +49,4 @@ from final_cte
 )
 
 select * from final_cte
-where call_id_maqsam not in (select call_id_maqsam from abc_cte where has_more_than_two_values = true)
+where call_id_maqsam not in (select call_id_maqsam from abc_cte where has_more_than_two_values = true) 
