@@ -4,6 +4,7 @@ config {
     name: "ftt_pftt_tutor_list",
     tags: ["expenses_finance"]
 }
+
 with ftt_cte as (
 Select 
     *
@@ -34,6 +35,7 @@ Select
      from al-gooru.TC_Ops.archived_list
 )
 
+, final_cte as (
 SELECT 
     lower(tutor_name) AS tutor_name
     ,hs_id
@@ -51,3 +53,7 @@ SELECT
 
     from ftt_cte
     where tutor_name is not null 
+)
+
+select *, row_number() over(partition by hs_id) as rn from final_cte
+qualify rn = 1
