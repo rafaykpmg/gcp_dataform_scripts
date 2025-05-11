@@ -10,7 +10,7 @@ SELECT
   contacts,
   createdAt AS created_at,
   updatedAt AS updated_at,
-  properties_additional_notes AS additional_notes,
+  -- properties_additional_notes AS additional_notes,
   properties_additional_notes_for_lost_reason AS additional_notes_for_lost_reason,
   properties_address AS address,
 round(safe_divide(SAFE_CAST(properties_amount as float64) , 3.75),2) AS amount,
