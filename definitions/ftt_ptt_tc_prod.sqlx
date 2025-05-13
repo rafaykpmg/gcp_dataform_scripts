@@ -55,5 +55,5 @@ SELECT
     where tutor_name is not null 
 )
 
-select *, row_number() over(partition by hs_id) as rn from final_cte
+select *, row_number() over(partition by hs_id,start_date, end_date,contract_type) as rn from final_cte
 qualify rn = 1
