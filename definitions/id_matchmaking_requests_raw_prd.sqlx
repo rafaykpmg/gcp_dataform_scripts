@@ -22,6 +22,8 @@ deleted_at,
 deal_id,
 subject_id,
 notification_id,
-is_pledged
+is_pledged,
+is_valid,
+value_en
 from
 ${ref('id_matchmaking_requests_raw_dataform')}

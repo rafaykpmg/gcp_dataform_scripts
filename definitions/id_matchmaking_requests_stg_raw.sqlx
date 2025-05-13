@@ -7,13 +7,13 @@ config {
 }
 
 select
-id,
+a.id,
 CASE when tmap.tutor_name is null then a.tutor_id ELSE tmap.tutor_name end as tutor_id,
   CAST(sub_deal_id AS INT64) AS sub_deal_id,
 case 
     when status = 'pending' then 'PENDING'
     when status = 'ignored' then 'IGNORED'
-    when status = 'selected' then 'ACCEPTED AND CLAIMED'
+    when status = 'selected' then 'SELECTED or CLAIMED'
     when status = 'rejected' then 'REJECTED'
     when status = 'questioned' then 'QUESITIONED'
     when status = 'missed' and questioned_at is not null then 'IGNORED'
@@ -27,9 +27,9 @@ questioned_at,
 rejected_at,
 rejection_reason,
 rejection_notes,
-created_at,
-updated_at,
-deleted_at,
+a.created_at,
+a.updated_at,
+a.deleted_at,
   CAST(deal_id AS INT64) AS deal_id,
 case subject_id
   WHEN 'c6c7aec6-f27a-11ed-873d-5c60badec1de' THEN 'A Levels'
@@ -133,7 +133,10 @@ case subject_id
     When '007a2286-e9b5-4494-ac53-bea7fca50085' Then 'Beginner Chinese'
 else subject_id end as subject_id,
 notification_id,
-is_pledged
+is_pledged,
+mr.is_valid,
+mr.value_en
 from
 `al-gooru.hubspot.id_matchmaking_requests`  a 
 left join `al-gooru.production.tutor_id_mapping_final` tmap on a.tutor_id = tmap.tutor_id 
+left join `al-gooru.hubspot.id_matchmaking_requests_rejection_reasons` mr on lower(a.rejection_reason)=lower(mr.code)
