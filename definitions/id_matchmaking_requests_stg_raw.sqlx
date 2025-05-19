@@ -8,6 +8,7 @@ config {
 
 select
 a.id,
+hat.tutor_id as hs_tutor_id,
 CASE when tmap.tutor_name is null then a.tutor_id ELSE tmap.tutor_name end as tutor_id,
   CAST(sub_deal_id AS INT64) AS sub_deal_id,
 case 
@@ -140,3 +141,4 @@ from
 `al-gooru.hubspot.id_matchmaking_requests`  a 
 left join `al-gooru.production.tutor_id_mapping_final` tmap on a.tutor_id = tmap.tutor_id 
 left join `al-gooru.hubspot.id_matchmaking_requests_rejection_reasons` mr on lower(a.rejection_reason)=lower(mr.code)
+left join ${ref('hubspot_approvedtutor_prod_dataform')} hat on a.tutor_id=hat.internal_dashboard_id
