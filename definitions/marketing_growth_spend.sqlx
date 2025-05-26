@@ -1,0 +1,234 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "marketing_growth_spend_final",
+    tags: ["growth_sheet"]
+}
+
+with google_cte as (
+  WITH deduped_campaigns AS (
+  SELECT
+    campaign_id,
+    ad_group_ad_ad_device_preference
+  FROM (
+    SELECT *,
+           ROW_NUMBER() OVER (PARTITION BY campaign_id ORDER BY segments_date DESC) AS rn
+    FROM `al-gooru.marketing_sourcing.google_ad_group_ad_legacy`
+  )
+  WHERE rn = 1
+)
+
+SELECT
+  a.segments_date AS Date,
+  a.campaign_name AS `campaign name`,
+  CAST(a.campaign_id as string) AS Campaign_ID,
+  a.campaign_status,
+  a.segments_ad_network_type AS Network,
+  sum(a.metrics_impressions) AS Impressions,
+  sum(a.metrics_clicks) AS Clicks,
+  sum(ROUND(SAFE_DIVIDE(a.metrics_cost_micros, a.metrics_clicks) / 1000000, 2)) AS CPC,
+  sum(ROUND(a.metrics_ctr, 2)) AS CTR,
+  sum(ROUND(a.metrics_cost_micros / 1000000, 2)) AS Cost_USD,
+  sum(a.metrics_conversions) AS Conversions,
+  sum(ROUND(SAFE_DIVIDE(a.metrics_conversions, a.metrics_clicks) * 100, 2)) AS Conversion_Rate,
+  sum(ROUND(SAFE_DIVIDE(a.metrics_cost_micros / 1000000, a.metrics_conversions), 2)) AS Cost_Per_Conversion,
+  'Google Ads' AS channel,
+  a.campaign_advertising_channel_sub_type AS sub_channel,
+  c.ad_group_ad_ad_device_preference AS source,
+  FORMAT_DATE('%Y|%m', a.segments_date) AS Month,
+  FORMAT_DATE('%Y-%W', a.segments_date) AS Week
+FROM
+  `al-gooru.marketing_sourcing.google_campaign` a
+LEFT JOIN deduped_campaigns c
+  ON a.campaign_id = c.campaign_id
+WHERE
+  a.metrics_impressions > 0
+GROUP BY ALL
+)
+-- select * from google_cte
+, meta as (
+with platform as (WITH parsed AS (
+  SELECT
+    campaign_id,
+
+    ARRAY(
+      SELECT JSON_VALUE(x)
+      FROM UNNEST(JSON_EXTRACT_ARRAY(targeting, '$.publisher_platforms')) AS x
+    ) AS publisher_platforms,
+
+    ARRAY(
+      SELECT JSON_VALUE(x)
+      FROM UNNEST(JSON_EXTRACT_ARRAY(targeting, '$.device_platforms')) AS x
+    ) AS device_platforms,
+    row_number() over (partition by campaign_id) as rn
+
+  FROM `al-gooru.marketing_sourcing.fb_ad_sets`
+)
+
+SELECT
+  campaign_id,
+  ARRAY_TO_STRING(publisher_platforms, ', ') AS publisher_platforms,
+  ARRAY_TO_STRING(device_platforms, ', ') AS device_platforms
+FROM parsed
+where rn=1
+)
+
+, conversion_summary AS (
+  SELECT
+    date_start,
+    campaign_id,
+    SUM(SAFE_CAST(JSON_VALUE(action, '$.value') AS INT64)) AS conversions
+  FROM
+    `al-gooru.marketing_sourcing.fb_ads_insights`,
+    UNNEST(JSON_EXTRACT_ARRAY(actions)) AS action
+  WHERE
+    JSON_VALUE(action, '$.action_type') IN (
+      'lead',
+      'offsite_conversion.fb_pixel_lead',
+      'onsite_conversion.lead_grouped',
+      'onsite_web_lead',
+      'complete_registration',
+      'initiate_checkout',
+      'offsite_conversion.fb_pixel_initiate_checkout',
+      'add_to_cart',
+      'purchase',
+      'mobile_app_install',
+      'omni_app_install'
+    )
+  GROUP BY date_start, campaign_id
+)
+
+SELECT
+  a.date_start AS Date,
+  a.campaign_name AS `campaign name`,
+  a.campaign_id AS Campaign_ID,
+  s.status AS campaign_status,
+  p.publisher_platforms AS Network,
+  sum(a.impressions) AS Impressions,
+  sum(a.clicks) AS Clicks,
+  sum(a.cpc) AS CPC,
+  sum(a.ctr) AS CTR,
+  sum(ROUND(SAFE_CAST(a.spend AS FLOAT64), 2)) AS Cost_USD,
+  sum(IFNULL(c.conversions, 0)) AS Conversions,
+  sum(ROUND(SAFE_DIVIDE(c.conversions, a.clicks) * 100, 2)) AS Conversion_Rate,
+  sum(ROUND(SAFE_DIVIDE(SAFE_CAST(a.spend AS FLOAT64), c.conversions), 2)) AS Cost_Per_Conversion,
+  'Meta' AS channel,
+  'M' AS sub_channel,
+  p.device_platforms AS source,
+  FORMAT_DATE('%Y|%m', a.date_start) AS Month,
+  FORMAT_DATE('%Y-%W', a.date_start) AS Week
+FROM
+  `al-gooru.marketing_sourcing.fb_ads_insights` a
+LEFT JOIN
+  conversion_summary c
+  ON a.campaign_id = c.campaign_id AND a.date_start = c.date_start
+LEFT JOIN al-gooru.marketing_sourcing.fb_campaigns s
+  ON a.campaign_id=s.id
+LEFT JOIN platform p
+  ON a.campaign_id=p.campaign_id
+WHERE
+  a.impressions > 0
+GROUP BY ALL
+)
+, tiktok as (
+  SELECT
+  Cast(stat_time_day AS DATE) AS Date,
+  SAFE_CAST(JSON_VALUE(metrics, '$.campaign_name') AS string) AS `campaign name`,
+  CAST(campaign_id as string) AS Campaign_ID,
+  CAST(NULL as string) AS campaign_status,
+  CAST(NULL as string) AS Network,
+  SUM(SAFE_CAST(JSON_VALUE(metrics, '$.impressions') AS INT64)) AS Impressions,
+  SUM(SAFE_CAST(JSON_VALUE(metrics, '$.clicks') AS INT64)) AS Clicks,
+  SUM(SAFE_CAST(JSON_VALUE(metrics, '$.cpc') AS FLOAT64)) AS CPC,
+  SUM(SAFE_CAST(JSON_VALUE(metrics, '$.ctr') AS FLOAT64)) AS CTR,
+  SUM(ROUND(SAFE_CAST(JSON_VALUE(metrics, '$.spend') AS FLOAT64), 2)) AS Cost_USD,
+
+  Sum(SAFE_CAST(JSON_VALUE(metrics, '$.conversion') AS INT64)) AS Conversions,
+  SUM(SAFE_CAST(JSON_VALUE(metrics, '$.conversion_rate') AS FLOAT64)) AS Conversion_Rate,
+  SUM(SAFE_CAST(JSON_VALUE(metrics, '$.cost_per_conversion') AS FLOAT64)) AS Cost_Per_Conversion,
+  "Tiktok"  AS channel,
+  SAFE_CAST(JSON_VALUE(metrics, '$.promotion_type') AS string)  AS sub_channel,
+  CAST(NULL as string) AS source,
+  FORMAT_DATE('%Y|%m', Cast(stat_time_day AS DATE)) AS Month,
+  FORMAT_DATE('%Y-%W', Cast(stat_time_day AS DATE)) AS Week
+
+FROM
+  `al-gooru.marketing_sourcing.tiktok_ads_reports_daily`
+WHERE
+  SAFE_CAST(JSON_VALUE(metrics, '$.impressions') AS INT64) > 0
+GROUP BY ALL
+)
+
+, snapchat as (
+  with cte as (
+  select 
+      distinct campaign.id as campaign_id
+        ,campaign.name as name
+        ,campaign.status as status
+    from al-gooru.snapchat_ads.campaigns
+)
+SELECT
+  PARSE_DATE('%Y-%m-%d', SUBSTR(START_TIME, 1, 10)) AS Date,
+  cte.name AS `campaign name`,
+  a.Campaign_ID AS Campaign_ID,
+  cte.status AS campaign_status,
+  CAST(NULL as string) AS Network,
+
+  SUM(impressions) AS Impressions,
+  SUM(swipes) AS Clicks,
+
+  SUM(ROUND(SAFE_DIVIDE(spend / 1000000.0, swipes), 2)) AS CPC,
+  SUM(ROUND(SAFE_DIVIDE(swipes, impressions) * 100, 2)) AS CTR,
+  sum(ROUND(spend / 1000000.0, 2)) AS Cost_USD,
+  SUM(IFNULL(total_installs, 0)) AS Conversions,
+  SUM(ROUND(SAFE_DIVIDE(total_installs, swipes) * 100, 2)) AS Conversion_Rate,
+  SUM(ROUND(SAFE_DIVIDE(spend / 1000000.0, total_installs), 2)) AS Cost_Per_Conversion,
+
+  'Snapchat' AS channel,
+  'S' AS sub_channel,
+  CAST(NULL as string) AS source,
+
+  FORMAT_DATE('%Y|%m', PARSE_DATE('%Y-%m-%d', SUBSTR(START_TIME, 1, 10))) AS Month,
+  FORMAT_DATE('%Y-%W', PARSE_DATE('%Y-%m-%d', SUBSTR(START_TIME, 1, 10))) AS Week
+FROM
+  `al-gooru.snapchat_ads.campaign_reports` a
+  left join cte
+  on a.CAMPAIGN_ID=cte.campaign_id
+WHERE
+  impressions > 0
+GROUP BY ALL
+)
+,influencer as (
+   SELECT 
+  CAST(Date as DATE) as DATE,
+  campaign_name,
+  Campaign_ID,
+  campaign_status,
+  Network,
+  CAST(Impressions as int64) as Impressions,
+  CAST(Clicks as int64) as Clicks,
+  CAST(CPC as float64) as CPC,
+  CAST(CTR as float64) as CTR,
+  SAFE_CAST(REPLACE(Cost_USD, '$', '') AS FLOAT64) AS Cost_USD,
+  CAST(Conversions as int64) as Conversions,
+  CAST(Conversion_Rate as float64) as Conversion_Rate,
+  CAST(Cost_Per_Conversion as float64) as Cost_Per_Conversion,
+  channel,
+  sub_channel,
+  source,
+  Month,
+  Week
+ FROM `al-gooru.marketing_staging_dev.AppStore_Influencer_Marketing`
+)
+select * from (
+select * from google_cte
+union all
+select * from meta
+union all
+select * from tiktok
+union all 
+select * from snapchat
+union all 
+select * from influencer
+)
+order by date desc
