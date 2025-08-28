@@ -1,0 +1,27 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "deals_compaign_dataform",
+    tags: ["deals_pipeline"]
+}
+SELECT
+  deal_id,
+  CAST(created_at AS datetime) AS date,
+  SOURCE,
+  utm_source,
+  utm_campaign,
+  utm_medium,
+  utm_content,
+  utm_term,
+  trial_session_total_amounts,
+  gclid,
+  wbraid,
+  gbraid,
+  lead_type,
+  session_type,
+  package_session_type,
+  flow,
+  lqs_class,
+  amount_paid
+FROM
+  ${ref('hubspot_deals_prod_dataform')}
