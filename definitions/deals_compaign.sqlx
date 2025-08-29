@@ -25,5 +25,5 @@ SELECT
   amount_paid
 FROM
   ${ref('hubspot_deals_prod_dataform')}
-  -- order by 2 desc
-  -- limit 55000
+  order by 2 desc
+  limit 55000
