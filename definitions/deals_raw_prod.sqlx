@@ -12,6 +12,7 @@ WITH
     deal_id,
     STRING_AGG(JSON_VALUE(contact), ', ')  AS associated_contact_id,
     TIMESTAMP_ADD(created_at, INTERVAL 3 hour) AS created_at,
+    TIMESTAMP_ADD(updated_at, INTERVAL 3 hour) AS updated_at,
     MAX(lower(pipeline)) AS pipeline,
     max(source) AS source,
     -- MAX(additional_notes) AS additional_notes,
@@ -570,8 +571,7 @@ WITH
     ${ref('hubspot_deals_raw_dataform')}, 
 UNNEST(JSON_QUERY_ARRAY(contacts)) AS contact
   GROUP BY
-    1,
-    3)
+    all)
 
 , ticket_cte as (
     select associated_deal_id, sum(cast(number_of_hours_refunded as float64)) as number_of_hours_refunded, 

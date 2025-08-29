@@ -7,6 +7,7 @@ config {
 SELECT
   deal_id,
   CAST(created_at AS datetime) AS date,
+  CAST(updated_at AS datetime) AS record_updated_at,
   SOURCE,
   utm_source,
   utm_campaign,
