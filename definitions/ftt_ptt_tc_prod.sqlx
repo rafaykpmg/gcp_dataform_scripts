@@ -12,9 +12,23 @@ Select
 
 union all
 
-Select 
-    *
-     from al-gooru.TC_Ops.trusted_ftt_list
+SELECT
+  tutor_name,
+  hs_id,
+  algooru_email,
+  personal_email,
+  COALESCE(
+    SAFE.PARSE_DATE('%Y-%m-%d', start_date),
+    SAFE.PARSE_DATE('%m/%d/%Y', start_date)
+  ) AS start_date,
+  COALESCE(
+    SAFE.PARSE_DATE('%Y-%m-%d', end_date),
+    SAFE.PARSE_DATE('%m/%d/%Y', end_date)
+  ) AS end_date,
+  contract_type,
+  session_type,
+  hourly_limit
+FROM `al-gooru.TC_Ops.trusted_ftt_list`
 
 union all
 
@@ -41,7 +55,7 @@ SELECT
     ,hs_id
     ,lower(algooru_email) AS algooru_email
     ,lower(personal_email) as personal_email
-    ,FORMAT_DATE('%Y-%m-%d', start_date) AS start_date
+    ,Date(FORMAT_DATE('%Y-%m-%d', start_date)) AS start_date
     ,CASE
     WHEN start_date IS NOT NULL AND end_date IS NOT NULL THEN FORMAT_DATE('%Y-%m-%d', end_date)
     WHEN start_date IS NOT NULL AND end_date IS NULL THEN '2099-01-01'
