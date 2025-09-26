@@ -508,7 +508,7 @@ round(safe_divide(SAFE_CAST(first_payment_amount__sales_ as float64) , 3.75),2) 
   package_length_unit AS package_length_unit,
   package_level_type AS package_level_type,
   lower(package_session_type) AS package_session_type,
-  package_start_date as package_start_date,
+  CAST(package_start_date as date) as package_start_date,
   paid_hours AS paid_hours,
   parent_name AS parent_name,
   partnership AS partnership,
