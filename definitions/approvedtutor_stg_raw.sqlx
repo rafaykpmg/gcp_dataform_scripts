@@ -1,3 +1,32 @@
+pre_operations {
+DECLARE keys ARRAY<STRING>;
+DECLARE cols STRING;
+DECLARE sql STRING;
+SET keys = (
+  SELECT ARRAY_AGG(DISTINCT k)
+  FROM `al-gooru.hubspot.hubspot_Approved_Tutors`,
+  UNNEST(JSON_KEYS(properties)) AS k
+);
+
+SET cols = (
+  SELECT STRING_AGG(FORMAT('JSON_VALUE(properties, "$.%s") AS `%s`', key, key), ', ')
+  FROM UNNEST(keys) AS key
+);
+
+SET sql = FORMAT("""
+CREATE OR REPLACE TABLE `staging.hubspot_approvedtutors_staging_dataform` AS
+SELECT
+  id,
+  createdAt,
+  UpdatedAt,
+  archived,
+  %s
+FROM `al-gooru.hubspot.hubspot_Approved_Tutors`""", cols);
+
+
+EXECUTE IMMEDIATE sql;
+}
+---------Main Raw-------
 config {
     type: "table",
     schema: "raw",
@@ -5,579 +34,581 @@ config {
     description: "Time formats are corrected for all the timestamp fields ",
     tags:["approvedtutor_pipeline"]
 }
+
 select
 CAST(a.id AS INT64) AS tutor_id,
 a.createdAt AS created_at,
 a.updatedAt AS updated_at,
-REGEXP_REPLACE(properties_phone_number, r'[^0-9]', '') AS phone_number,
-json_value(properties,'$.archived') AS archived,
-json_value(properties,'$.archived_at') AS archived_at,
-json_value(properties,'$.associations') AS associations,
-properties_accepted_date AS accepted_date,
-properties_age AS age,
-lower(properties_contract_type) as contract_type,
-properties_application_complete AS application_complete,
-properties_application_note_attachment_type AS application_note_attachment_type,
-properties_application_note_url AS application_note_url,
-properties_bank_account_name AS bank_account_name,
-properties_bank_address AS bank_address,
-properties_bank_name AS bank_name,
-properties_bio AS bio,
-properties_categories AS categories,
+REGEXP_REPLACE(phone_number, r'[^0-9]', '') AS phone_number,
+a.archived AS archived,
+-- archived_at AS archived_at,
+-- associations AS associations,
+a.accepted_date AS accepted_date,
+age AS age,
+lower(contract_type) as contract_type,
+application_complete AS application_complete,
+application_note_attachment_type AS application_note_attachment_type,
+application_note_url AS application_note_url,
+bank_account_name AS bank_account_name,
+bank_address AS bank_address,
+bank_name AS bank_name,
+a.bio AS bio,
+categories AS categories,
 -- a.city,
 c.NameEn as city,
-properties_coordinates as coordinates,
+coordinates as coordinates,
 case 
-when properties_country_of_residence = '816f04ac-0552-40dd-aa5e-abaa2d659de6' then "Saudi"
-when properties_country_of_residence = '0a4305d0-b1f5-4d79-8123-86ad116890e0' then "Lebanon"
-when properties_country_of_residence = '58a86551-481b-4b74-ab7b-edc1482ff117' then "Egypt"
-when properties_country_of_residence = '001542d2-f21c-4b34-g97f-7abcb2f24e35' then "Other"
-else properties_country_of_residence end as country_of_residence,
-properties_curriculum AS curriculum,
-properties_curriculums_for_tutor AS curriculums_for_tutor,
-properties_date_of_application AS date_of_application,
-properties_date_of_birth AS date_of_birth,
-properties_degree AS degree,
+when country_of_residence = '816f04ac-0552-40dd-aa5e-abaa2d659de6' then "Saudi"
+when country_of_residence = '0a4305d0-b1f5-4d79-8123-86ad116890e0' then "Lebanon"
+when country_of_residence = '58a86551-481b-4b74-ab7b-edc1482ff117' then "Egypt"
+when country_of_residence = '001542d2-f21c-4b34-g97f-7abcb2f24e35' then "Other"
+else country_of_residence end as country_of_residence,
+curriculum AS curriculum,
+curriculums_for_tutor AS curriculums_for_tutor,
+date_of_application AS date_of_application,
+date_of_birth AS date_of_birth,
+degree AS degree,
     CASE
-        WHEN properties_district = 'e9b5c49b-76cb-4d36-ba61-a43aa5e3efa6' THEN 'أبو شعيب-الجموم'
-        WHEN properties_district = 'edeb385a-5045-460c-9ec8-38abaf6752a4' THEN 'أبو عروة-الجموم'
-        WHEN properties_district = '99995d9d-8f16-4c81-8122-377cae837208' THEN 'أشبيلية-بقيق'
-        WHEN properties_district = '45c2deca-4d8f-441b-84f1-cb743e9e0980' THEN 'ابا لسعود-نجران'
-        WHEN properties_district = '3d722b57-4284-4535-8f44-2f7467368133' THEN 'ابحر الجنوبية-جدة'
-        WHEN properties_district = '6c8c379e-c41c-42fe-abfb-fd224a43b31c' THEN 'ابحر الشمالية-جدة'
-        WHEN properties_district = '9e574ae2-d9a3-41e0-9b3b-67c63d1dc082' THEN 'ابرق الرغامة-جدة'
-        WHEN properties_district = '91312f4b-9a69-4dd7-8942-3b0112dfb961' THEN 'ابن خلدون-البكيرية'
-        WHEN properties_district = '6467171e-5334-48fa-af46-acdf0d3b80a4' THEN 'ابن خلدون-الدمام'
-        WHEN properties_district = 'b25dcc78-9d4d-4aed-a370-bfd9331253fb' THEN 'ابن سيناء-الخبر'
-        WHEN properties_district = 'ca911b3b-9d11-4b31-b945-85d989ef3200' THEN 'ابن صبيح-بريدة'
-        WHEN properties_district = '13a6bd7c-4e0d-456e-b495-b5d4668b49c1' THEN 'ابهاء الجديدة-ابها'
-        WHEN properties_district = '4399f7f5-f91e-404f-bcaa-590094c7b2e8' THEN 'ابو بريقاء-المدينة المنورة'
-        WHEN properties_district = '60819655-f2b9-4eba-9ec3-bb731a31c584' THEN 'ابو سبعة-تبوك'
-        WHEN properties_district = 'f57a66a5-8105-4933-b7ac-73270ab51f53' THEN 'ابو سليم-القويعية'
-        WHEN properties_district = 'fe036119-48d1-4617-a67b-35a5282caa35' THEN 'ابو شجرة-املج'
-        WHEN properties_district = 'dca0aacd-eddd-4dfc-892e-a9ea4935ddd2' THEN 'ابو كبير-المدينة المنورة'
-        WHEN properties_district = '51bbe33c-6cc8-4c5c-bdf5-0c2149de9ecd' THEN 'ابو معن-صفوى'
-        WHEN properties_district = '2e43903b-d650-4e7d-a12b-39da89971b1a' THEN 'ابو موسى الاشعري-حفر الباطن'
-        WHEN properties_district = '8743bc10-825c-49f6-ab00-bd82da2a3a89' THEN 'اجا-حائل'
-        WHEN properties_district = 'c93a84c8-24cc-4685-81c4-85d7a9cebad7' THEN 'اجياد-مكة المكرمة'
-        WHEN properties_district = 'e5701194-d1d2-4c43-b75f-5234df6dd16e' THEN 'احد-الدمام'
-        WHEN properties_district = '5f907c9d-df89-4c1b-95e4-d7ca441d3ee0' THEN 'احد-الرياض'
-        WHEN properties_district = 'c9ee4b85-d21e-4840-9b7c-8adce042cba1' THEN 'احد-الزلفي'
-        WHEN properties_district = '157ae17e-22e0-4d1d-a1ec-bfad7ca19344' THEN 'ادمان-بدر'
-        WHEN properties_district = 'a09393c5-4ed8-4fb8-bb32-3d22cee7d924' THEN 'ارامكو-الخفجي'
-        WHEN properties_district = 'f3e261f1-527d-4548-a00f-27426edf8a47' THEN 'ازميرالدا-مدينة الملك عبدالله الاقتصادية'
-        WHEN properties_district = 'a4867063-00d5-4be0-a2e6-865651bec088' THEN 'اسكان الحرس الوطني-الهفوف'
-        WHEN properties_district = 'b0650004-729c-4bed-ad9a-677403394cdb' THEN 'اسكان قوى الامن العام-تبوك'
-        WHEN properties_district = '21f9c6b3-72b6-4073-8dbc-1604152eb99a' THEN 'اشبيليا-الخبر'
-        WHEN properties_district = 'd62b1131-86d2-437f-a629-6bc360c02569' THEN 'اشبيلية-الرياض'
-        WHEN properties_district = 'e79bbc52-9c18-41d1-ad78-84b9bb8180eb' THEN 'اشبيلية-عنيزة'
-        WHEN properties_district = '269d6661-8f5e-409d-85e2-1ecb5644cba2' THEN 'ال هميلة-خميس مشيط'
-        WHEN properties_district = 'fd781864-8459-4edd-8dcb-0ea29708944d' THEN 'الأثير-الدمام'
-        WHEN properties_district = 'eb6d9018-be83-427a-9123-3d03bc1fa43c' THEN 'الأمانة-الدمام'
-        WHEN properties_district = 'e756ef8f-4a23-477a-bbeb-73cf032bee3b' THEN 'الأمل-الدمام'
-        WHEN properties_district = '919bae98-9f04-4d12-aeb4-7564a91a598d' THEN 'الأندلس-المزاحمية'
-        WHEN properties_district = '3897f252-cd21-405f-a332-71f9c47492f2' THEN 'الأنوار-الدمام'
-        WHEN properties_district = '44a0b6af-7477-490f-885e-fb1669812c30' THEN 'الاتصالات-الدمام'
-        WHEN properties_district = 'c61de42a-7f9d-41d5-a1cc-bf7702e01e9d' THEN 'الاجاويد-جدة'
-        WHEN properties_district = 'b0f9238a-95f1-4b98-af80-a6e55e58ec51' THEN 'الاجواد-جدة'
-        WHEN properties_district = '084671fb-98e6-4888-b39e-a145986f2f50' THEN 'الاحتفالات-الرس'
-        WHEN properties_district = 'db6ca2e6-bc24-47d3-89b1-ffacda70e157' THEN 'الاحساء-الجبيل'
-        WHEN properties_district = '2f9364cf-a932-4221-97df-bc1616d8e9fd' THEN 'الاخضر-بريدة'
-        WHEN properties_district = 'd66e79ff-d8d4-4cb4-b865-a25c39e68b72' THEN 'الاداري-دومة الجندل'
-        WHEN properties_district = '238b5c83-1910-451c-b21c-6d1f4ef32f28' THEN 'الادارية-رفحاء'
-        WHEN properties_district = '00a020b8-f814-401d-ab67-aa8798a30480' THEN 'الاذاعة-عفيف'
-        WHEN properties_district = '74cdf18a-9d3b-4e50-960b-072216fcc203' THEN 'الاراك-جازان'
-        WHEN properties_district = '75a07883-d0cd-456a-9f75-5abe39020fba' THEN 'الازدهار-الرياض'
-        WHEN properties_district = 'bedbb662-a0f2-43bd-93ef-f0877ba55d0d' THEN 'الازدهار-الشنان'
-        WHEN properties_district = '80479ca5-b1d7-40a0-b00a-5a7056a9d0d9' THEN 'الازهار-القنفذة'
-        WHEN properties_district = 'b5c59210-4a55-4318-aac7-4f0a501b879f' THEN 'الاسكان التنموي-رفحاء'
-        WHEN properties_district = 'a69c8cfe-c8eb-4b71-9f24-c4f4b822f657' THEN 'الاسكان العام-الهفوف'
-        WHEN properties_district = '318e8aab-48d0-4071-8731-d8d3aa7613df' THEN 'الاسكان-الخبر'
-        WHEN properties_district = 'ad4cff0e-dc5f-40c0-9322-140027231ca3' THEN 'الاسكان-الدمام'
-        WHEN properties_district = '2541eef4-9d82-45c7-9dfe-683cc51914bf' THEN 'الاسكان-الرياض'
-        WHEN properties_district = 'c997fa34-896a-46ab-a1df-eba8374434f7' THEN 'الاسكان-المدينة المنورة'
-        WHEN properties_district = 'fde5328e-1b05-418e-b591-651a3554e922' THEN 'الاسكان-بريدة'
-        WHEN properties_district = 'fe10c085-b86c-47c6-8529-04d7836e8b31' THEN 'الاسكان-حفر الباطن'
-        WHEN properties_district = '84807cd5-a69b-4c1b-a31f-f295bd4a2f4e' THEN 'الاسكان-عنك'
-        WHEN properties_district = '30555064-1ac0-4641-b56e-db8a1eea7bfc' THEN 'الاسكان-عنيزة'
-        WHEN properties_district = 'f832aeed-a765-4007-9df1-779b4e2d6352' THEN 'الاشرفية-عنيزة'
-        WHEN properties_district = 'c5ef5d61-f169-4f76-afb1-323d3622717b' THEN 'الاصالة-جدة'
-        WHEN properties_district = 'ee5078fe-1192-4425-aac1-770fe2774c29' THEN 'الاصالة-ينبع'
-        WHEN properties_district = '42e98cd3-7982-46c6-bb65-83bbc5841453' THEN 'الاصفر-البدائع'
-        WHEN properties_district = '07cdf2b2-7040-400e-ad4b-51df6a74cbff' THEN 'الاصفر-عفيف'
-        WHEN properties_district = 'da4560ab-6f00-47b0-afd2-cff873379fe1' THEN 'الاصيفرين-المدينة المنورة'
-        WHEN properties_district = '44cb82a8-6dc1-42fe-b02b-bb6d62a4ea12' THEN 'الاضواء-ينبع'
-        WHEN properties_district = '9b3a922b-3e9b-4042-983b-e206cb196b2c' THEN 'الافراح-رياض الخبراء'
-        WHEN properties_district = '1e0a5939-03cc-4a0c-983e-80e64e7bf44a' THEN 'الامارة-ينبع'
-        WHEN properties_district = 'b17e001b-802a-4881-b9b4-afe26aa32c99' THEN 'الامل-الخفجي'
-        WHEN properties_district = 'd3987fc0-e64b-4ed5-ab10-1a386dc45286' THEN 'الاملاح-نجران'
-        WHEN properties_district = '2b9b9ad6-dd0d-47b4-bc7a-8cba28f5e9ed' THEN 'الامن-بريدة'
-        WHEN properties_district = '8389ebd6-4c80-46a9-afdc-41e6da620cca' THEN 'الامواج-الخبر'
-        WHEN properties_district = 'c0414c96-d610-4e8c-a9ad-836ad6297b72' THEN 'الامواج-جدة'
-        WHEN properties_district = '7a60050d-48fb-4289-a601-53dd13ed8515' THEN 'الامير سلطان-بيشة'
-        WHEN properties_district = 'b01494e4-3f79-4ee7-9260-20b73084b101' THEN 'الامير سلمان-المجمعة'
-        WHEN properties_district = 'f6d6928c-280e-46b9-b74b-59401fa9d24f' THEN 'الامير عبدالمجيد-جدة'
-        WHEN properties_district = '24a7dd50-9237-4524-adb0-d65f979c4d89' THEN 'الامير فهد بن سلمان-الخفجي'
-        WHEN properties_district = 'fafa6cbb-60e2-4481-9038-4f6a16b7c371' THEN 'الامير فواز الجنوبى-جدة'
-        WHEN properties_district = 'a1009506-4c30-47c1-8e80-0dcb666c783d' THEN 'الامير فواز الشمالى-جدة'
-        WHEN properties_district = 'fa6d00bd-db51-4f3b-ac56-0fe924e0adc2' THEN 'الامير محمد بن سعود-الدمام'
-        WHEN properties_district = '2163470c-6b3e-48a3-9681-45064198ee92' THEN 'الامير نايف-الخفجي'
-        WHEN properties_district = 'cc947622-c7ef-4816-ab7b-c8b3978c79f4' THEN 'الاندلس-ابها'
-        WHEN properties_district = 'd82480ee-6722-4a64-9ad5-617b25d33b4a' THEN 'الاندلس-ابو عريش'
-        WHEN properties_district = 'e6a73119-b58a-4c19-808f-0895401a7ed4' THEN 'الاندلس-البدائع'
-        WHEN properties_district = 'dce3c369-1aff-4e08-9d1e-aff0436eab7d' THEN 'الاندلس-الجبيل'
-        WHEN properties_district = 'a33741ab-e1a3-406d-a4ea-24072b605da8' THEN 'الاندلس-الخبر'
-        WHEN properties_district = '7771ca32-c617-45cd-9871-7eb689df0d10' THEN 'الاندلس-الخرج'
-        WHEN properties_district = '9ad216c8-c419-4eb3-8b80-d5b52014c31d' THEN 'الاندلس-الرياض'
-        WHEN properties_district = '0be1aa9b-d7a7-46c8-8823-a7ee328d7ca7' THEN 'الاندلس-الزلفي'
-        WHEN properties_district = 'ec55c936-bb15-4985-a776-5b91b8b37b1b' THEN 'الاندلس-الشماسية'
-        WHEN properties_district = '74832e9e-2c94-48b0-9c10-cd283cbd48ad' THEN 'الاندلس-الغاط'
-        WHEN properties_district = 'bfaaf633-a86d-4ca3-9680-f223eb044495' THEN 'الاندلس-المجاردة'
-        WHEN properties_district = '51c53f4b-b5b6-424c-977f-128f4e630d02' THEN 'الاندلس-المجمعة'
-        WHEN properties_district = '7c2ec01c-9a94-4b96-8bf3-2537514e97db' THEN 'الاندلس-الهفوف'
-        WHEN properties_district = '629ab4ed-cf65-4009-947b-5549c235cbab' THEN 'الاندلس-بقيق'
-        WHEN properties_district = 'f101354d-a5fb-42e4-b20e-fef087fd818c' THEN 'الاندلس-بيشة'
-        WHEN properties_district = '5274dac8-cccb-457b-9f56-0f12d4e4ebcf' THEN 'الاندلس-تاروت'
-        WHEN properties_district = '5b9250a5-d083-4b26-99a4-38b794aab873' THEN 'الاندلس-جدة'
-        WHEN properties_district = '547df79a-4d51-4e85-8d77-dd98c0ec81a0' THEN 'الاندلس-رأس تنورة'
-        WHEN properties_district = '39785c33-08fb-4694-8ab8-d66e817c992f' THEN 'الاندلس-رياض الخبراء'
-        WHEN properties_district = '95c6f94b-32a2-4045-befd-def235370450' THEN 'الاندلس-قرية العليا'
-        WHEN properties_district = 'fd904a4e-55a7-4f07-8fc0-b6a89c6a56e4' THEN 'الاندلس-مكة المكرمة'
-        WHEN properties_district = 'd3340c26-4091-4b6c-9904-1ff99ad35c55' THEN 'الانوار-عنك'
-        WHEN properties_district = 'f640215b-4214-4d9d-9082-644439057be8' THEN 'الاوجام-صفوى'
-        WHEN properties_district = '942dddb3-19f9-4b04-ba02-7c60e6bacb2f' THEN 'الباحر-صبيا'
-        WHEN properties_district = '575f1fbe-c08b-47b6-bd84-7eccf5af417a' THEN 'البادية-الدمام'
-        WHEN properties_district = '82ba4cb0-7a8c-4269-ab96-2f4666246f9f' THEN 'الباطن-حفر الباطن'
-        WHEN properties_district = 'ad6c36cb-7983-442b-b326-da40e9163df0' THEN 'الباطن-حوطة بني تميم'
-        WHEN properties_district = '43217b34-aae8-4b77-bd07-5b0f31853e21' THEN 'الباهر-الباحة'
-        WHEN properties_district = 'b2576206-5c96-417a-ba4a-0f9ad08c094d' THEN 'البثنة-ينبع'
-        WHEN properties_district = '449dab91-3084-4c34-98a2-ed765d2c2cc2' THEN 'البجيري-الدرعية'
-        WHEN properties_district = 'f18ae6eb-0611-4b61-acec-f749b2896301' THEN 'البحاري-القطيف'
-        WHEN properties_district = 'd5d0fcac-815e-4d23-b54a-176cbf073405' THEN 'البحر-الخبر'
-        WHEN properties_district = 'ccc2b392-0f33-49aa-82d4-583ccb8439ca' THEN 'البحر-القطيف'
-        WHEN properties_district = '3b43a24c-6b1f-4363-aff9-7f9ee09c19bd' THEN 'البحيرات-دومة الجندل'
-        WHEN properties_district = 'ebe07a8d-ce55-4746-bae6-cea6e0b0a84f' THEN 'البحيرات-مكة المكرمة'
-        WHEN properties_district = 'd16cdfc4-9d25-4964-b45a-943ba8dd88ff' THEN 'البحيرة-الخبر'
-        WHEN properties_district = 'e0b84474-ae2e-46b0-bcf3-0a8f1f8135ee' THEN 'البحيرة-الدمام'
-        WHEN properties_district = 'a24bf6b7-2acb-46b2-b3ee-b6e1de4ff283' THEN 'البحيرة-حائل'
-        WHEN properties_district = '0cb5c226-1ad7-412a-af6c-455f4fa8c35a' THEN 'البحيرة-ينبع'
-        WHEN properties_district = '7893eb4e-0dee-49e1-9a40-36f3ac6bb522' THEN 'البدر-عنك'
-        WHEN properties_district = '21fb3ed1-646a-443e-af11-13a52521b1b8' THEN 'البدع-الشماسية'
-        WHEN properties_district = '1d19c2f9-5469-454c-883d-d8e3cca71d49' THEN 'البدنة-حائل'
-        WHEN properties_district = '8358a260-9ccd-4f4c-902e-b7e76af9b4dc' THEN 'البدور-صفوى'
-        WHEN properties_district = '2a951531-fe7d-42ed-9b81-084672e8f2c3' THEN 'البديع-الدمام'
-        WHEN properties_district = 'f786ea48-8b4e-424e-9849-fd97d4ffbd32' THEN 'البديع-القطيف'
-        WHEN properties_district = 'fb2ac630-8767-4473-bad7-2c9d2b0283ff' THEN 'البديعة-الخرج'
-        WHEN properties_district = 'f6d6f989-a3b1-4db0-8e3a-2fe4891b7f8b' THEN 'البديعة-الرياض'
-        WHEN properties_district = '50921e01-4197-4f78-af50-be83eda78c4b' THEN 'البديعة-القطيف'
-        WHEN properties_district = '917560dc-f1e1-4a08-9157-77f153846a78' THEN 'البديعة-عنيزة'
-        WHEN properties_district = '2e9f761e-4d34-42b3-9007-6b0657d8e582' THEN 'البرج-الخرج'
-        WHEN properties_district = '07ccc747-df1c-41fb-80db-9e8b88210a9e' THEN 'البركة-الخرج'
-        WHEN properties_district = '29ad9890-48a8-478d-83f1-c5ab108b99d9' THEN 'البركة-المدينة المنورة'
-        WHEN properties_district = '11a6aa40-bf9a-48df-bf31-58379419a31a' THEN 'البركة-جدة'
-        WHEN properties_district = '9dc0cc66-f67c-454e-b4c4-cd6a8f3f02f2' THEN 'البرية-الرياض'
-        WHEN properties_district = 'df7604a6-5d29-4fdd-931a-d833602dda3b' THEN 'البريكة-بريدة'
-        WHEN properties_district = 'b3164867-dbd3-43b7-a782-592732fc6f6f' THEN 'البساتين-البدائع'
-        WHEN properties_district = '0763a3d5-35df-4874-939b-3e6604ae1abd' THEN 'البساتين-الدمام'
-        WHEN properties_district = '9c388e76-2d6d-4b80-acd4-0bcaec6d0325' THEN 'البساتين-القويعية'
-        WHEN properties_district = 'f0f0054e-d845-466c-945f-e4bc5b3fe3ae' THEN 'البساتين-بقيق'
-        WHEN properties_district = 'ab49d9e3-ac2e-4971-8148-338f8d47c5d9' THEN 'البساتين-بللسمر'
-        WHEN properties_district = '1f535f0b-25fb-427d-83e7-68c15b76b3e8' THEN 'البساتين-تبوك'
-        WHEN properties_district = '8b467227-29ed-454a-b35a-8a3994432d86' THEN 'البساتين-جدة'
-        WHEN properties_district = 'cf92f678-1575-4008-92ad-d8441397c462' THEN 'البستان-الخبر'
-        WHEN properties_district = 'f54655b8-a9cd-4d02-903e-8e8a5bd684c3' THEN 'البستان-الغاط'
-        WHEN properties_district = '47f69acd-af83-4137-8863-db40dcb8e509' THEN 'البستان-القطيف'
-        WHEN properties_district = '0def0ddf-454e-412d-920a-4d26078dae92' THEN 'البستان-المذنب'
-        WHEN properties_district = 'be223feb-c246-4fba-8a11-a4d1fefe4138' THEN 'البستان-عنك'
-        WHEN properties_district = '0acd676b-c85d-45bc-b3cf-d2c15475f3cf' THEN 'البستان-عنيزة'
-        WHEN properties_district = '8f0b5eb9-be6e-49f3-b808-957de90e1779' THEN 'البشائر-جازان'
-        WHEN properties_district = '9c61601c-07fe-4461-896c-c83eb680ce59' THEN 'البشائر-جدة'
-        WHEN properties_district = '7b94b5e7-dcee-4a50-81ee-1bb962031b02' THEN 'البشر-بريدة'
-        WHEN properties_district = '1f2f2092-93f3-4884-b276-dc216d02a827' THEN 'البصر-بريدة'
-        WHEN properties_district = '0e15d6a6-ae0c-45f1-81a6-6f56f45864e5' THEN 'البصرة-المجمعة'
-        WHEN properties_district = 'c534cddc-ae57-4c9d-9397-71e3b30f14ce' THEN 'البصرة-محايل'
-        WHEN properties_district = 'e41a0310-fe6b-4f36-ae57-1526f09ba158' THEN 'البصيرة-الهفوف'
-        WHEN properties_district = '768f83fb-cf7f-498e-bc45-3ce9c61af8f0' THEN 'البطحاء-الرياض'
-        WHEN properties_district = '105d4f79-c981-467a-816f-be4e510a2636' THEN 'البطحاء-املج'
-        WHEN properties_district = '4320c2d3-6285-4e2d-baac-fe3f78ee0a71' THEN 'البغدادية الشرقية-جدة'
-        WHEN properties_district = '602bfd5f-e462-49e5-b2c8-77e4e2db8173' THEN 'البغدادية الغربية-جدة'
-        WHEN properties_district = '1fd7ce9a-8e46-422b-b09c-0b3b01dcb090' THEN 'البلاد-الشماسية'
-        WHEN properties_district = 'de914ad6-dc46-4fa7-b50c-968ecd293992' THEN 'البلد القديم-البكيرية'
-        WHEN properties_district = '4067da6f-0dbb-472d-80a0-5847bf844300' THEN 'البلد-الوجه'
-        WHEN properties_district = '236f7692-088e-4c70-b3d5-32b49bb7ed05' THEN 'البلد-املج'
-        WHEN properties_district = '3f2d7b90-2b91-4544-921f-1605ee4aa5c7' THEN 'البلد-تربه'
-        WHEN properties_district = '4fea6ac9-1076-4d6e-8c3e-a1b22594a37e' THEN 'البلد-جدة'
-        WHEN properties_district = '76380023-21d9-4eeb-b934-9fea29740d5f' THEN 'البلد-ضبا'
-        WHEN properties_district = 'f5519113-8afa-46f4-a5a9-5ceff0852244' THEN 'البلد-محايل'
-        WHEN properties_district = 'a0dc3e63-a9e8-40a2-b03f-f5ce5569e9e5' THEN 'البلدية-احد المسارحة'
-        WHEN properties_district = '6675c9ad-d3f7-4ee9-aa44-cfdf264e39d7' THEN 'البلدية-حفر الباطن'
-        WHEN properties_district = 'bddfe53b-14c1-422c-a9f3-8743d1088405' THEN 'البلقاء-المدينة المنورة'
-        WHEN properties_district = 'f7de45b6-9bf4-46bc-a70a-31c9198a08ac' THEN 'البندر-ينبع'
-        WHEN properties_district = '0f55ff48-23a1-4df1-b7e6-e821e6115360' THEN 'البندرية-الخبر'
-        WHEN properties_district = 'a9687256-1bed-4fc0-870a-70dd392f5e2f' THEN 'البندرية-الهفوف'
-        WHEN properties_district = 'bceea3ab-954a-4f2c-8f9a-da6e58b88781' THEN 'البهجة-ينبع'
-        WHEN properties_district = '6a1cc669-a89b-4fd3-9bfa-4dba14bbdb35' THEN 'البوادي-القطيف'
-        WHEN properties_district = '00d0783a-9ccd-4c08-8adf-56a3c60f7e99' THEN 'البوادي-بيشة'
-        WHEN properties_district = 'be05399d-592d-418c-8a75-7f7e00c7c375' THEN 'البوادي-جدة'
-        WHEN properties_district = '520f6988-5e8c-4894-935c-97840e005e6d' THEN 'البوادي-خميس مشيط'
-        WHEN properties_district = '68419c4c-66e3-42e4-b9e7-d0057a12bfa9' THEN 'البويطن-عنيزة'
-        WHEN properties_district = '3573d692-0940-4c00-a2dd-3f18da0e9067' THEN 'البياطرية-احد المسارحة'
-        WHEN properties_district = '9bfde792-1f27-4837-a3f7-6e6d4a65b1ce' THEN 'البيبان-مكة المكرمة'
-        WHEN properties_district = '90a83bdd-a863-4ac3-9c9e-767a2c453b99' THEN 'البيضاء-البكيرية'
-        WHEN properties_district = '62aa619f-8930-4d22-87e9-22853629057d' THEN 'البيلسان-مدينة الملك عبدالله الاقتصادية'
-        WHEN properties_district = 'cc30d02d-3a61-4ac1-af5c-32974d09bc99' THEN 'التاخي-ينبع'
-        WHEN properties_district = 'b67dc17d-206f-4da2-93dc-ad1c36114bf5' THEN 'التحكيم-دومة الجندل'
-        WHEN properties_district = '715a92c0-7a97-4b19-b02b-76f655ff0beb' THEN 'التحلية-الخبر'
-        WHEN properties_district = '7bff84e2-a5ea-49d1-b805-9fd8d83dfc18' THEN 'التحلية-القريات'
-        WHEN properties_district = 'cca4a093-f6d1-4350-91d8-5a294e68208c' THEN 'التحلية-املج'
-        WHEN properties_district = '5f9f7e72-4047-441e-9696-c06bc8804e2a' THEN 'التحلية-عنيزة'
-        WHEN properties_district = '046da9e3-2e4f-4532-aa13-a96a4668b793' THEN 'التشاليح-النعيرية'
-        WHEN properties_district = 'f43fc11a-0687-4880-8a33-0e138ec3b2d4' THEN 'التشليح-بريدة'
-        WHEN properties_district = '630bcd5c-7cd9-4163-b068-64a4e610310c' THEN 'التضامن-بيشة'
-        WHEN properties_district = '6fcb6de7-a7c8-4edc-b068-4fa092a7c0ef' THEN 'التضامن-جدة'
-        WHEN properties_district = '2ecfa970-13cf-481b-b9d3-2dd153f2b97b' THEN 'التضامن-حوطة بني تميم'
-        WHEN properties_district = 'e7d1465a-6806-4e75-9751-fe7bca0c6bc3' THEN 'التعاون-الخبر'
-        WHEN properties_district = '121e9f85-4240-4210-b925-3a9436741e4d' THEN 'التعاون-الخفجي'
-        WHEN properties_district = 'd39f52a7-b5ca-47f4-ad04-91435d0cf961' THEN 'التعاون-الرياض'
-        WHEN properties_district = '76e76c13-3a80-4303-88bb-5ce3634645f6' THEN 'التعاون-تثليث'
-        WHEN properties_district = 'de926bf6-74fc-4d6a-9c0a-1c3572ae7b12' THEN 'التعاون-جدة'
-        WHEN properties_district = '68ead265-4dbf-408e-ac28-e38a06fd9b88' THEN 'التعاون-رياض الخبراء'
-        WHEN properties_district = 'ff2ac857-6a27-4da8-8ef6-d61eab1a836f' THEN 'التعاون-ينبع'
-        WHEN properties_district = '25918b91-1a0a-458c-affb-60ff5ca538db' THEN 'التعليم-البدائع'
-        WHEN properties_district = '153ed885-f4c0-4591-b948-cca4f47330a9' THEN 'التعليم-الرس'
-        WHEN properties_district = 'bdf7e28d-802e-477f-8355-26e91c771881' THEN 'التغيرة-بريدة'
-        WHEN properties_district = '1594da63-62cb-490b-a1b7-8c625177f5ba' THEN 'التقدم-المجاردة'
-        WHEN properties_district = '356ccea2-d310-4d8e-a6ba-a3b75f833c20' THEN 'التقوى-مكة المكرمة'
-        WHEN properties_district = '0e276619-ef95-417f-8481-b06922a8e186' THEN 'التلال-حفر الباطن'
-        WHEN properties_district = 'f41bb726-d6de-4a32-9995-7d8171d6060e' THEN 'التلال-صفوى'
-        WHEN properties_district = 'e5cf7d2a-dfc9-4d4b-ac9e-02b21db9c967' THEN 'التنعيم-مكة المكرمة'
-        WHEN properties_district = 'b2db9ec8-fc03-4dd2-be84-e302f0f79caf' THEN 'التوبي-القطيف'
-        WHEN properties_district = '1e25ce60-5531-456d-a4f4-10ccdf7effa8' THEN 'التوفيق-بريدة'
-        WHEN properties_district = '5c498a0a-bff1-4405-b806-fab26d0dda3d' THEN 'التيسير-مكة المكرمة'
-        WHEN properties_district = '92a8d0c3-629d-47f0-8136-125fba6f76bf' THEN 'الثريا-القطيف'
-        WHEN properties_district = '40a06e28-bead-4f67-8e40-5650a4eaaf79' THEN 'الثعالبة-جدة'
-        WHEN properties_district = '32b75831-1350-47d6-a781-86f7d95fbcfe' THEN 'الثغر-جدة'
-        WHEN properties_district = '099e37e2-266a-4e9a-b990-f013e4e7c427' THEN 'الثقافة-عنيزة'
-        WHEN properties_district = '5babb0bd-8b76-480e-8034-530eed3408dd' THEN 'الثقبة-الخبر'
-        WHEN properties_district = '0c435c8a-2164-4603-9276-7a9bb56e87e2' THEN 'الجابرة-المدينة المنورة'
-        WHEN properties_district = '432f6da7-ea15-4c7c-bb8f-ec857ad2ca3b' THEN 'الجابرية-ينبع'
-        WHEN properties_district = '2bc8f911-bef5-4f8c-853a-73311c02042c' THEN 'الجار-ينبع'
-        WHEN properties_district = '99e0e464-1770-4307-824b-74de617a997c' THEN 'الجارودية-القطيف'
-        WHEN properties_district = 'af3a4c4e-8fde-4003-8685-1f689379ea1b' THEN 'الجال-الشماسية'
-        WHEN properties_district = '5e256c35-e4a6-4f4f-b47b-82096d2cc57d' THEN 'الجامعة العربية-ينبع'
-        WHEN properties_district = '2195bded-d952-417d-a03e-9da7526511f7' THEN 'الجامعة-الظهران'
-        WHEN properties_district = '464099bc-ecbe-483d-ba3b-9cfb5c84b2b7' THEN 'الجامعة-المدينة المنورة'
-        WHEN properties_district = '3c3bd117-ec7a-407c-9caa-7e00b95d702b' THEN 'الجامعة-جدة'
-        WHEN properties_district = '8678c996-35df-4d2b-ba8b-733fe9bc66b0' THEN 'الجامعة-حفر الباطن'
-        WHEN properties_district = '8cc70db1-c117-468e-8e2a-6c34a3b9f7dc' THEN 'الجامعة-مكة المكرمة'
-        WHEN properties_district = '349d68b4-e4d4-4f18-a6ca-7c92d942003c' THEN 'الجامعة-ينبع'
-        WHEN properties_district = 'd733b75a-6681-4970-aaf9-d1a4c03f37bf' THEN 'الجامعي-عنيزة'
-        WHEN properties_district = 'e4ebae56-a64a-42d8-9088-6ce79aa60414' THEN 'الجامعيين-الدمام'
-        WHEN properties_district = '5a50c0c8-8fb8-4d48-92a8-de2cc71f5efa' THEN 'الجامعيين-المجمعة'
-        WHEN properties_district = 'bd6538d2-3852-4c7e-a446-104dfea4fbc9' THEN 'الجامعيين-الهفوف'
-        WHEN properties_district = '6e2c97eb-aa99-47ab-9170-25e09d353b68' THEN 'الجامعيين-بريدة'
-        WHEN properties_district = '7d542465-1803-402f-b33f-b054d6417c75' THEN 'الجامعيين-تاروت'
-        WHEN properties_district = '23698ded-8221-43df-bf3a-980b2f28385d' THEN 'الجبل-تاروت'
-        WHEN properties_district = '10ac6fdb-df46-4ef7-8bfa-994c0e15ef5a' THEN 'الجبل-جازان'
-        WHEN properties_district = '857ccae3-8dae-4683-ab21-3f9b2f71d0c5' THEN 'الجبيل البلد-الجبيل'
-        WHEN properties_district = '8c7378e3-5061-4734-b812-d48c91eee5ad' THEN 'الجديد-بدر'
-        WHEN properties_district = '1a758062-5ebd-4b17-956d-13ce08ff7238' THEN 'الجديدة-المذنب'
-        WHEN properties_district = 'dd547152-691f-4e84-8c15-f24f575c188d' THEN 'الجرادية-الرياض'
-        WHEN properties_district = 'ebb02c56-0055-4950-b329-f3bc15505b6c' THEN 'الجرادية-صامطة'
-        WHEN properties_district = 'ac727987-7302-48ca-ada7-c1707432aeb6' THEN 'الجراري-القطيف'
-        WHEN properties_district = 'eae5afe9-c550-4f21-b254-624a4ab39084' THEN 'الجربة-نجران'
-        WHEN properties_district = '5cbb32ab-799a-416a-80af-62f07a35ddc8' THEN 'الجردة-بريدة'
-        WHEN properties_district = '20f79e54-07bc-40f8-abb6-883eb6ee577a' THEN 'الجردية-صامطة'
-        WHEN properties_district = '50c64886-3616-479c-9213-2b439021b059' THEN 'الجرعاوي-دومة الجندل'
-        WHEN properties_district = '7f0f6f46-cbb4-49b4-8bf6-5955969bbac3' THEN 'الجزيرة-الرياض'
-        WHEN properties_district = '46b41de9-0b1d-4fee-8998-7509097913ce' THEN 'الجزيرة-القطيف'
-        WHEN properties_district = 'f1318657-29e2-49fd-9597-dcde7fb9e80b' THEN 'الجزيرة-القويعية'
-        WHEN properties_district = '7f4f03fc-bbb6-4031-b7b6-6023c4abd1c6' THEN 'الجزيرة-خميس مشيط'
-        WHEN properties_district = '97a77f7c-7eff-4807-afdd-a6968d8cd63c' THEN 'الجزيرة-عنيزة'
-        WHEN properties_district = '5a3df58e-ba52-47c6-8e93-8d97e73665b5' THEN 'الجسر-الخبر'
-        WHEN properties_district = 'ec1b6565-ceae-41ba-bd42-b16fdb9af0c6' THEN 'الجش-عنك'
-        WHEN properties_district = 'c2c4b116-0d3a-4506-8055-c9a10a82e44b' THEN 'الجشة-الهفوف'
-        WHEN properties_district = '031484f5-25f2-4341-916f-b55e2a6f6587' THEN 'الجصة-المدينة المنورة'
-        WHEN properties_district = '968be339-35f4-46aa-92bb-54e1cc99f59f' THEN 'الجفونية-القويعية'
-        WHEN properties_district = 'e4d87209-250b-4e51-a4e9-8416698d63d3' THEN 'الجفيدرية-ليلى'
-        WHEN properties_district = 'd6e8cce2-faa5-4f1c-a7a9-642cb9241331' THEN 'الجلده-عنيزة'
-        WHEN properties_district = '5af7ca07-9bcf-440f-a8c5-9fa819d72a52' THEN 'الجلوية-الدمام'
-        WHEN properties_district = '46545a85-6117-4d1e-a5f5-a932825e39d3' THEN 'الجماوات-المدينة المنورة'
-        WHEN properties_district = '0d12605f-1ebc-422e-852f-5a9c794ab0d2' THEN 'الجمعة-المدينة المنورة'
-        WHEN properties_district = '6f169000-6b08-4e8f-8189-ec76e4867ac2' THEN 'الجميزة-مكة المكرمة'
-        WHEN properties_district = 'b3065990-dd3b-4220-90e0-c86475a074d4' THEN 'الجميماء-رفحاء'
-        WHEN properties_district = '2eb6569f-f4fa-4280-8de6-98aff9cb6335' THEN 'الجميمة-القطيف'
-        WHEN properties_district = '94651e16-e6a7-4f54-86ad-30a094fa95b6' THEN 'الجنادرية-الرياض'
-        WHEN properties_district = '22e57387-1d19-4617-b8fb-ebec5ad95beb' THEN 'الجنادرية-ثادق'
-        WHEN properties_district = '140f8bba-f87e-45fd-a0db-7d9ed46080c0' THEN 'الجنادرية-محايل'
-        WHEN properties_district = '58a2a2f6-4135-48ad-b9fb-00291bf4172f' THEN 'الجندل-الرس'
-        WHEN properties_district = '77f28c7b-c45f-4f43-aca0-a55ee33268eb' THEN 'الجواهر-القطيف'
-        WHEN properties_district = '0738284a-caea-4359-8b5e-3fa4df4387e9' THEN 'الجوهرة-الخبر'
-        WHEN properties_district = 'a14ab889-6616-4a73-b236-f8bc7c11ac09' THEN 'الجوهرة-الخفجي'
-        WHEN properties_district = 'e099f5ab-b29a-4752-a993-ef37a261486e' THEN 'الجوهرة-الدمام'
-        WHEN properties_district = '5441199a-f385-4825-8de4-07a68dc33002' THEN 'الجوهرة-تاروت'
-        WHEN properties_district = 'd6f93c94-e01e-4c80-a889-b050e29cbc5f' THEN 'الجوهرة-جدة'
-        WHEN properties_district = 'ed0d1028-68cc-4db1-b25f-af3260c74968' THEN 'الجوهرة-عنيزة'
-        WHEN properties_district = '9896b543-c6b7-4b6f-b1c0-09765579bb9f' THEN 'الحائر-الرياض'
-        WHEN properties_district = '11b6ca99-d909-4ae4-b849-8dc15285646a' THEN 'الحاجب-عنيزة'
-        WHEN properties_district = '6349abf6-f3e3-4b8d-9112-fc45815cbeb3' THEN 'الحارثية-الخرمة'
-        WHEN properties_district = '07dac6bc-7fe4-49eb-928e-52c72763f74f' THEN 'الحازم-الباحة'
-        WHEN properties_district = 'ca2609ee-49e8-46a1-94af-5e4ff01df086' THEN 'الحاوية-الباحة'
-        WHEN properties_district = 'd265ec3d-efce-441a-8dbf-383df4658976' THEN 'الحجاج-عفيف'
-        WHEN properties_district = '49d75cf8-7758-4548-8450-43951c15ccb3' THEN 'الحجاز-الجبيل'
-        WHEN properties_district = '8302c021-b6d6-4406-b917-baf5ebe1c1f1' THEN 'الحجاز-تثليث'
-        WHEN properties_district = 'f3cdb407-92b7-4561-99d5-460fbaae5d81' THEN 'الحجون-مكة المكرمة'
-        WHEN properties_district = 'b1ecf0ed-1516-44c1-8b37-dca3d841c7e2' THEN 'الحدائق-ينبع'
-        WHEN properties_district = '1d2067f3-e637-4701-8883-5c2064c63828' THEN 'الحديقة-الخرمة'
-        WHEN properties_district = 'a122bd81-804d-4cc5-947e-34cf662a60a2' THEN 'الحديقة-المدينة المنورة'
-        WHEN properties_district = '6339c85c-088e-4505-8489-7fdcae7dfa82' THEN 'الحديقة-عنيزة'
-        WHEN properties_district = '9ddbb673-92f3-4866-ba93-ddf24c1432aa' THEN 'الحرس الوطني-الظهران'
-        WHEN properties_district = 'e9e6e209-b918-47d1-9a92-f97544a4c944' THEN 'الحرس الوطني-ينبع'
-        WHEN properties_district = '47d17d5b-03cc-4cd2-8fa9-355fff7f7d46' THEN 'الحرم-المدينة المنورة'
-        WHEN properties_district = '1c1062c3-73e9-4f66-ad11-568ef57f0f2f' THEN 'الحرم-مكة المكرمة'
-        WHEN properties_district = 'e53181c8-3711-4bbc-92f5-7baf8c7c2511' THEN 'الحرمين-الدوادمي'
-        WHEN properties_district = '6b1fae53-7d87-4a1e-b8c2-81b97f8f1103' THEN 'الحزام الاخضر-الخبر'
-        WHEN properties_district = '301e4377-dc1a-4def-abc2-d38a42a3f329' THEN 'الحزام الذهبي-الخبر'
-        WHEN properties_district = '568fd9ac-4ff1-4ea9-96b8-d15d08d87329' THEN 'الحزم-الخرمة'
-        WHEN properties_district = '5cf2ba45-d5e0-48bd-b2d4-e4e7c2d5995a' THEN 'الحزم-الرس'
+        WHEN district = 'e9b5c49b-76cb-4d36-ba61-a43aa5e3efa6' THEN 'أبو شعيب-الجموم'
+        WHEN district = 'edeb385a-5045-460c-9ec8-38abaf6752a4' THEN 'أبو عروة-الجموم'
+        WHEN district = '99995d9d-8f16-4c81-8122-377cae837208' THEN 'أشبيلية-بقيق'
+        WHEN district = '45c2deca-4d8f-441b-84f1-cb743e9e0980' THEN 'ابا لسعود-نجران'
+        WHEN district = '3d722b57-4284-4535-8f44-2f7467368133' THEN 'ابحر الجنوبية-جدة'
+        WHEN district = '6c8c379e-c41c-42fe-abfb-fd224a43b31c' THEN 'ابحر الشمالية-جدة'
+        WHEN district = '9e574ae2-d9a3-41e0-9b3b-67c63d1dc082' THEN 'ابرق الرغامة-جدة'
+        WHEN district = '91312f4b-9a69-4dd7-8942-3b0112dfb961' THEN 'ابن خلدون-البكيرية'
+        WHEN district = '6467171e-5334-48fa-af46-acdf0d3b80a4' THEN 'ابن خلدون-الدمام'
+        WHEN district = 'b25dcc78-9d4d-4aed-a370-bfd9331253fb' THEN 'ابن سيناء-الخبر'
+        WHEN district = 'ca911b3b-9d11-4b31-b945-85d989ef3200' THEN 'ابن صبيح-بريدة'
+        WHEN district = '13a6bd7c-4e0d-456e-b495-b5d4668b49c1' THEN 'ابهاء الجديدة-ابها'
+        WHEN district = '4399f7f5-f91e-404f-bcaa-590094c7b2e8' THEN 'ابو بريقاء-المدينة المنورة'
+        WHEN district = '60819655-f2b9-4eba-9ec3-bb731a31c584' THEN 'ابو سبعة-تبوك'
+        WHEN district = 'f57a66a5-8105-4933-b7ac-73270ab51f53' THEN 'ابو سليم-القويعية'
+        WHEN district = 'fe036119-48d1-4617-a67b-35a5282caa35' THEN 'ابو شجرة-املج'
+        WHEN district = 'dca0aacd-eddd-4dfc-892e-a9ea4935ddd2' THEN 'ابو كبير-المدينة المنورة'
+        WHEN district = '51bbe33c-6cc8-4c5c-bdf5-0c2149de9ecd' THEN 'ابو معن-صفوى'
+        WHEN district = '2e43903b-d650-4e7d-a12b-39da89971b1a' THEN 'ابو موسى الاشعري-حفر الباطن'
+        WHEN district = '8743bc10-825c-49f6-ab00-bd82da2a3a89' THEN 'اجا-حائل'
+        WHEN district = 'c93a84c8-24cc-4685-81c4-85d7a9cebad7' THEN 'اجياد-مكة المكرمة'
+        WHEN district = 'e5701194-d1d2-4c43-b75f-5234df6dd16e' THEN 'احد-الدمام'
+        WHEN district = '5f907c9d-df89-4c1b-95e4-d7ca441d3ee0' THEN 'احد-الرياض'
+        WHEN district = 'c9ee4b85-d21e-4840-9b7c-8adce042cba1' THEN 'احد-الزلفي'
+        WHEN district = '157ae17e-22e0-4d1d-a1ec-bfad7ca19344' THEN 'ادمان-بدر'
+        WHEN district = 'a09393c5-4ed8-4fb8-bb32-3d22cee7d924' THEN 'ارامكو-الخفجي'
+        WHEN district = 'f3e261f1-527d-4548-a00f-27426edf8a47' THEN 'ازميرالدا-مدينة الملك عبدالله الاقتصادية'
+        WHEN district = 'a4867063-00d5-4be0-a2e6-865651bec088' THEN 'اسكان الحرس الوطني-الهفوف'
+        WHEN district = 'b0650004-729c-4bed-ad9a-677403394cdb' THEN 'اسكان قوى الامن العام-تبوك'
+        WHEN district = '21f9c6b3-72b6-4073-8dbc-1604152eb99a' THEN 'اشبيليا-الخبر'
+        WHEN district = 'd62b1131-86d2-437f-a629-6bc360c02569' THEN 'اشبيلية-الرياض'
+        WHEN district = 'e79bbc52-9c18-41d1-ad78-84b9bb8180eb' THEN 'اشبيلية-عنيزة'
+        WHEN district = '269d6661-8f5e-409d-85e2-1ecb5644cba2' THEN 'ال هميلة-خميس مشيط'
+        WHEN district = 'fd781864-8459-4edd-8dcb-0ea29708944d' THEN 'الأثير-الدمام'
+        WHEN district = 'eb6d9018-be83-427a-9123-3d03bc1fa43c' THEN 'الأمانة-الدمام'
+        WHEN district = 'e756ef8f-4a23-477a-bbeb-73cf032bee3b' THEN 'الأمل-الدمام'
+        WHEN district = '919bae98-9f04-4d12-aeb4-7564a91a598d' THEN 'الأندلس-المزاحمية'
+        WHEN district = '3897f252-cd21-405f-a332-71f9c47492f2' THEN 'الأنوار-الدمام'
+        WHEN district = '44a0b6af-7477-490f-885e-fb1669812c30' THEN 'الاتصالات-الدمام'
+        WHEN district = 'c61de42a-7f9d-41d5-a1cc-bf7702e01e9d' THEN 'الاجاويد-جدة'
+        WHEN district = 'b0f9238a-95f1-4b98-af80-a6e55e58ec51' THEN 'الاجواد-جدة'
+        WHEN district = '084671fb-98e6-4888-b39e-a145986f2f50' THEN 'الاحتفالات-الرس'
+        WHEN district = 'db6ca2e6-bc24-47d3-89b1-ffacda70e157' THEN 'الاحساء-الجبيل'
+        WHEN district = '2f9364cf-a932-4221-97df-bc1616d8e9fd' THEN 'الاخضر-بريدة'
+        WHEN district = 'd66e79ff-d8d4-4cb4-b865-a25c39e68b72' THEN 'الاداري-دومة الجندل'
+        WHEN district = '238b5c83-1910-451c-b21c-6d1f4ef32f28' THEN 'الادارية-رفحاء'
+        WHEN district = '00a020b8-f814-401d-ab67-aa8798a30480' THEN 'الاذاعة-عفيف'
+        WHEN district = '74cdf18a-9d3b-4e50-960b-072216fcc203' THEN 'الاراك-جازان'
+        WHEN district = '75a07883-d0cd-456a-9f75-5abe39020fba' THEN 'الازدهار-الرياض'
+        WHEN district = 'bedbb662-a0f2-43bd-93ef-f0877ba55d0d' THEN 'الازدهار-الشنان'
+        WHEN district = '80479ca5-b1d7-40a0-b00a-5a7056a9d0d9' THEN 'الازهار-القنفذة'
+        WHEN district = 'b5c59210-4a55-4318-aac7-4f0a501b879f' THEN 'الاسكان التنموي-رفحاء'
+        WHEN district = 'a69c8cfe-c8eb-4b71-9f24-c4f4b822f657' THEN 'الاسكان العام-الهفوف'
+        WHEN district = '318e8aab-48d0-4071-8731-d8d3aa7613df' THEN 'الاسكان-الخبر'
+        WHEN district = 'ad4cff0e-dc5f-40c0-9322-140027231ca3' THEN 'الاسكان-الدمام'
+        WHEN district = '2541eef4-9d82-45c7-9dfe-683cc51914bf' THEN 'الاسكان-الرياض'
+        WHEN district = 'c997fa34-896a-46ab-a1df-eba8374434f7' THEN 'الاسكان-المدينة المنورة'
+        WHEN district = 'fde5328e-1b05-418e-b591-651a3554e922' THEN 'الاسكان-بريدة'
+        WHEN district = 'fe10c085-b86c-47c6-8529-04d7836e8b31' THEN 'الاسكان-حفر الباطن'
+        WHEN district = '84807cd5-a69b-4c1b-a31f-f295bd4a2f4e' THEN 'الاسكان-عنك'
+        WHEN district = '30555064-1ac0-4641-b56e-db8a1eea7bfc' THEN 'الاسكان-عنيزة'
+        WHEN district = 'f832aeed-a765-4007-9df1-779b4e2d6352' THEN 'الاشرفية-عنيزة'
+        WHEN district = 'c5ef5d61-f169-4f76-afb1-323d3622717b' THEN 'الاصالة-جدة'
+        WHEN district = 'ee5078fe-1192-4425-aac1-770fe2774c29' THEN 'الاصالة-ينبع'
+        WHEN district = '42e98cd3-7982-46c6-bb65-83bbc5841453' THEN 'الاصفر-البدائع'
+        WHEN district = '07cdf2b2-7040-400e-ad4b-51df6a74cbff' THEN 'الاصفر-عفيف'
+        WHEN district = 'da4560ab-6f00-47b0-afd2-cff873379fe1' THEN 'الاصيفرين-المدينة المنورة'
+        WHEN district = '44cb82a8-6dc1-42fe-b02b-bb6d62a4ea12' THEN 'الاضواء-ينبع'
+        WHEN district = '9b3a922b-3e9b-4042-983b-e206cb196b2c' THEN 'الافراح-رياض الخبراء'
+        WHEN district = '1e0a5939-03cc-4a0c-983e-80e64e7bf44a' THEN 'الامارة-ينبع'
+        WHEN district = 'b17e001b-802a-4881-b9b4-afe26aa32c99' THEN 'الامل-الخفجي'
+        WHEN district = 'd3987fc0-e64b-4ed5-ab10-1a386dc45286' THEN 'الاملاح-نجران'
+        WHEN district = '2b9b9ad6-dd0d-47b4-bc7a-8cba28f5e9ed' THEN 'الامن-بريدة'
+        WHEN district = '8389ebd6-4c80-46a9-afdc-41e6da620cca' THEN 'الامواج-الخبر'
+        WHEN district = 'c0414c96-d610-4e8c-a9ad-836ad6297b72' THEN 'الامواج-جدة'
+        WHEN district = '7a60050d-48fb-4289-a601-53dd13ed8515' THEN 'الامير سلطان-بيشة'
+        WHEN district = 'b01494e4-3f79-4ee7-9260-20b73084b101' THEN 'الامير سلمان-المجمعة'
+        WHEN district = 'f6d6928c-280e-46b9-b74b-59401fa9d24f' THEN 'الامير عبدالمجيد-جدة'
+        WHEN district = '24a7dd50-9237-4524-adb0-d65f979c4d89' THEN 'الامير فهد بن سلمان-الخفجي'
+        WHEN district = 'fafa6cbb-60e2-4481-9038-4f6a16b7c371' THEN 'الامير فواز الجنوبى-جدة'
+        WHEN district = 'a1009506-4c30-47c1-8e80-0dcb666c783d' THEN 'الامير فواز الشمالى-جدة'
+        WHEN district = 'fa6d00bd-db51-4f3b-ac56-0fe924e0adc2' THEN 'الامير محمد بن سعود-الدمام'
+        WHEN district = '2163470c-6b3e-48a3-9681-45064198ee92' THEN 'الامير نايف-الخفجي'
+        WHEN district = 'cc947622-c7ef-4816-ab7b-c8b3978c79f4' THEN 'الاندلس-ابها'
+        WHEN district = 'd82480ee-6722-4a64-9ad5-617b25d33b4a' THEN 'الاندلس-ابو عريش'
+        WHEN district = 'e6a73119-b58a-4c19-808f-0895401a7ed4' THEN 'الاندلس-البدائع'
+        WHEN district = 'dce3c369-1aff-4e08-9d1e-aff0436eab7d' THEN 'الاندلس-الجبيل'
+        WHEN district = 'a33741ab-e1a3-406d-a4ea-24072b605da8' THEN 'الاندلس-الخبر'
+        WHEN district = '7771ca32-c617-45cd-9871-7eb689df0d10' THEN 'الاندلس-الخرج'
+        WHEN district = '9ad216c8-c419-4eb3-8b80-d5b52014c31d' THEN 'الاندلس-الرياض'
+        WHEN district = '0be1aa9b-d7a7-46c8-8823-a7ee328d7ca7' THEN 'الاندلس-الزلفي'
+        WHEN district = 'ec55c936-bb15-4985-a776-5b91b8b37b1b' THEN 'الاندلس-الشماسية'
+        WHEN district = '74832e9e-2c94-48b0-9c10-cd283cbd48ad' THEN 'الاندلس-الغاط'
+        WHEN district = 'bfaaf633-a86d-4ca3-9680-f223eb044495' THEN 'الاندلس-المجاردة'
+        WHEN district = '51c53f4b-b5b6-424c-977f-128f4e630d02' THEN 'الاندلس-المجمعة'
+        WHEN district = '7c2ec01c-9a94-4b96-8bf3-2537514e97db' THEN 'الاندلس-الهفوف'
+        WHEN district = '629ab4ed-cf65-4009-947b-5549c235cbab' THEN 'الاندلس-بقيق'
+        WHEN district = 'f101354d-a5fb-42e4-b20e-fef087fd818c' THEN 'الاندلس-بيشة'
+        WHEN district = '5274dac8-cccb-457b-9f56-0f12d4e4ebcf' THEN 'الاندلس-تاروت'
+        WHEN district = '5b9250a5-d083-4b26-99a4-38b794aab873' THEN 'الاندلس-جدة'
+        WHEN district = '547df79a-4d51-4e85-8d77-dd98c0ec81a0' THEN 'الاندلس-رأس تنورة'
+        WHEN district = '39785c33-08fb-4694-8ab8-d66e817c992f' THEN 'الاندلس-رياض الخبراء'
+        WHEN district = '95c6f94b-32a2-4045-befd-def235370450' THEN 'الاندلس-قرية العليا'
+        WHEN district = 'fd904a4e-55a7-4f07-8fc0-b6a89c6a56e4' THEN 'الاندلس-مكة المكرمة'
+        WHEN district = 'd3340c26-4091-4b6c-9904-1ff99ad35c55' THEN 'الانوار-عنك'
+        WHEN district = 'f640215b-4214-4d9d-9082-644439057be8' THEN 'الاوجام-صفوى'
+        WHEN district = '942dddb3-19f9-4b04-ba02-7c60e6bacb2f' THEN 'الباحر-صبيا'
+        WHEN district = '575f1fbe-c08b-47b6-bd84-7eccf5af417a' THEN 'البادية-الدمام'
+        WHEN district = '82ba4cb0-7a8c-4269-ab96-2f4666246f9f' THEN 'الباطن-حفر الباطن'
+        WHEN district = 'ad6c36cb-7983-442b-b326-da40e9163df0' THEN 'الباطن-حوطة بني تميم'
+        WHEN district = '43217b34-aae8-4b77-bd07-5b0f31853e21' THEN 'الباهر-الباحة'
+        WHEN district = 'b2576206-5c96-417a-ba4a-0f9ad08c094d' THEN 'البثنة-ينبع'
+        WHEN district = '449dab91-3084-4c34-98a2-ed765d2c2cc2' THEN 'البجيري-الدرعية'
+        WHEN district = 'f18ae6eb-0611-4b61-acec-f749b2896301' THEN 'البحاري-القطيف'
+        WHEN district = 'd5d0fcac-815e-4d23-b54a-176cbf073405' THEN 'البحر-الخبر'
+        WHEN district = 'ccc2b392-0f33-49aa-82d4-583ccb8439ca' THEN 'البحر-القطيف'
+        WHEN district = '3b43a24c-6b1f-4363-aff9-7f9ee09c19bd' THEN 'البحيرات-دومة الجندل'
+        WHEN district = 'ebe07a8d-ce55-4746-bae6-cea6e0b0a84f' THEN 'البحيرات-مكة المكرمة'
+        WHEN district = 'd16cdfc4-9d25-4964-b45a-943ba8dd88ff' THEN 'البحيرة-الخبر'
+        WHEN district = 'e0b84474-ae2e-46b0-bcf3-0a8f1f8135ee' THEN 'البحيرة-الدمام'
+        WHEN district = 'a24bf6b7-2acb-46b2-b3ee-b6e1de4ff283' THEN 'البحيرة-حائل'
+        WHEN district = '0cb5c226-1ad7-412a-af6c-455f4fa8c35a' THEN 'البحيرة-ينبع'
+        WHEN district = '7893eb4e-0dee-49e1-9a40-36f3ac6bb522' THEN 'البدر-عنك'
+        WHEN district = '21fb3ed1-646a-443e-af11-13a52521b1b8' THEN 'البدع-الشماسية'
+        WHEN district = '1d19c2f9-5469-454c-883d-d8e3cca71d49' THEN 'البدنة-حائل'
+        WHEN district = '8358a260-9ccd-4f4c-902e-b7e76af9b4dc' THEN 'البدور-صفوى'
+        WHEN district = '2a951531-fe7d-42ed-9b81-084672e8f2c3' THEN 'البديع-الدمام'
+        WHEN district = 'f786ea48-8b4e-424e-9849-fd97d4ffbd32' THEN 'البديع-القطيف'
+        WHEN district = 'fb2ac630-8767-4473-bad7-2c9d2b0283ff' THEN 'البديعة-الخرج'
+        WHEN district = 'f6d6f989-a3b1-4db0-8e3a-2fe4891b7f8b' THEN 'البديعة-الرياض'
+        WHEN district = '50921e01-4197-4f78-af50-be83eda78c4b' THEN 'البديعة-القطيف'
+        WHEN district = '917560dc-f1e1-4a08-9157-77f153846a78' THEN 'البديعة-عنيزة'
+        WHEN district = '2e9f761e-4d34-42b3-9007-6b0657d8e582' THEN 'البرج-الخرج'
+        WHEN district = '07ccc747-df1c-41fb-80db-9e8b88210a9e' THEN 'البركة-الخرج'
+        WHEN district = '29ad9890-48a8-478d-83f1-c5ab108b99d9' THEN 'البركة-المدينة المنورة'
+        WHEN district = '11a6aa40-bf9a-48df-bf31-58379419a31a' THEN 'البركة-جدة'
+        WHEN district = '9dc0cc66-f67c-454e-b4c4-cd6a8f3f02f2' THEN 'البرية-الرياض'
+        WHEN district = 'df7604a6-5d29-4fdd-931a-d833602dda3b' THEN 'البريكة-بريدة'
+        WHEN district = 'b3164867-dbd3-43b7-a782-592732fc6f6f' THEN 'البساتين-البدائع'
+        WHEN district = '0763a3d5-35df-4874-939b-3e6604ae1abd' THEN 'البساتين-الدمام'
+        WHEN district = '9c388e76-2d6d-4b80-acd4-0bcaec6d0325' THEN 'البساتين-القويعية'
+        WHEN district = 'f0f0054e-d845-466c-945f-e4bc5b3fe3ae' THEN 'البساتين-بقيق'
+        WHEN district = 'ab49d9e3-ac2e-4971-8148-338f8d47c5d9' THEN 'البساتين-بللسمر'
+        WHEN district = '1f535f0b-25fb-427d-83e7-68c15b76b3e8' THEN 'البساتين-تبوك'
+        WHEN district = '8b467227-29ed-454a-b35a-8a3994432d86' THEN 'البساتين-جدة'
+        WHEN district = 'cf92f678-1575-4008-92ad-d8441397c462' THEN 'البستان-الخبر'
+        WHEN district = 'f54655b8-a9cd-4d02-903e-8e8a5bd684c3' THEN 'البستان-الغاط'
+        WHEN district = '47f69acd-af83-4137-8863-db40dcb8e509' THEN 'البستان-القطيف'
+        WHEN district = '0def0ddf-454e-412d-920a-4d26078dae92' THEN 'البستان-المذنب'
+        WHEN district = 'be223feb-c246-4fba-8a11-a4d1fefe4138' THEN 'البستان-عنك'
+        WHEN district = '0acd676b-c85d-45bc-b3cf-d2c15475f3cf' THEN 'البستان-عنيزة'
+        WHEN district = '8f0b5eb9-be6e-49f3-b808-957de90e1779' THEN 'البشائر-جازان'
+        WHEN district = '9c61601c-07fe-4461-896c-c83eb680ce59' THEN 'البشائر-جدة'
+        WHEN district = '7b94b5e7-dcee-4a50-81ee-1bb962031b02' THEN 'البشر-بريدة'
+        WHEN district = '1f2f2092-93f3-4884-b276-dc216d02a827' THEN 'البصر-بريدة'
+        WHEN district = '0e15d6a6-ae0c-45f1-81a6-6f56f45864e5' THEN 'البصرة-المجمعة'
+        WHEN district = 'c534cddc-ae57-4c9d-9397-71e3b30f14ce' THEN 'البصرة-محايل'
+        WHEN district = 'e41a0310-fe6b-4f36-ae57-1526f09ba158' THEN 'البصيرة-الهفوف'
+        WHEN district = '768f83fb-cf7f-498e-bc45-3ce9c61af8f0' THEN 'البطحاء-الرياض'
+        WHEN district = '105d4f79-c981-467a-816f-be4e510a2636' THEN 'البطحاء-املج'
+        WHEN district = '4320c2d3-6285-4e2d-baac-fe3f78ee0a71' THEN 'البغدادية الشرقية-جدة'
+        WHEN district = '602bfd5f-e462-49e5-b2c8-77e4e2db8173' THEN 'البغدادية الغربية-جدة'
+        WHEN district = '1fd7ce9a-8e46-422b-b09c-0b3b01dcb090' THEN 'البلاد-الشماسية'
+        WHEN district = 'de914ad6-dc46-4fa7-b50c-968ecd293992' THEN 'البلد القديم-البكيرية'
+        WHEN district = '4067da6f-0dbb-472d-80a0-5847bf844300' THEN 'البلد-الوجه'
+        WHEN district = '236f7692-088e-4c70-b3d5-32b49bb7ed05' THEN 'البلد-املج'
+        WHEN district = '3f2d7b90-2b91-4544-921f-1605ee4aa5c7' THEN 'البلد-تربه'
+        WHEN district = '4fea6ac9-1076-4d6e-8c3e-a1b22594a37e' THEN 'البلد-جدة'
+        WHEN district = '76380023-21d9-4eeb-b934-9fea29740d5f' THEN 'البلد-ضبا'
+        WHEN district = 'f5519113-8afa-46f4-a5a9-5ceff0852244' THEN 'البلد-محايل'
+        WHEN district = 'a0dc3e63-a9e8-40a2-b03f-f5ce5569e9e5' THEN 'البلدية-احد المسارحة'
+        WHEN district = '6675c9ad-d3f7-4ee9-aa44-cfdf264e39d7' THEN 'البلدية-حفر الباطن'
+        WHEN district = 'bddfe53b-14c1-422c-a9f3-8743d1088405' THEN 'البلقاء-المدينة المنورة'
+        WHEN district = 'f7de45b6-9bf4-46bc-a70a-31c9198a08ac' THEN 'البندر-ينبع'
+        WHEN district = '0f55ff48-23a1-4df1-b7e6-e821e6115360' THEN 'البندرية-الخبر'
+        WHEN district = 'a9687256-1bed-4fc0-870a-70dd392f5e2f' THEN 'البندرية-الهفوف'
+        WHEN district = 'bceea3ab-954a-4f2c-8f9a-da6e58b88781' THEN 'البهجة-ينبع'
+        WHEN district = '6a1cc669-a89b-4fd3-9bfa-4dba14bbdb35' THEN 'البوادي-القطيف'
+        WHEN district = '00d0783a-9ccd-4c08-8adf-56a3c60f7e99' THEN 'البوادي-بيشة'
+        WHEN district = 'be05399d-592d-418c-8a75-7f7e00c7c375' THEN 'البوادي-جدة'
+        WHEN district = '520f6988-5e8c-4894-935c-97840e005e6d' THEN 'البوادي-خميس مشيط'
+        WHEN district = '68419c4c-66e3-42e4-b9e7-d0057a12bfa9' THEN 'البويطن-عنيزة'
+        WHEN district = '3573d692-0940-4c00-a2dd-3f18da0e9067' THEN 'البياطرية-احد المسارحة'
+        WHEN district = '9bfde792-1f27-4837-a3f7-6e6d4a65b1ce' THEN 'البيبان-مكة المكرمة'
+        WHEN district = '90a83bdd-a863-4ac3-9c9e-767a2c453b99' THEN 'البيضاء-البكيرية'
+        WHEN district = '62aa619f-8930-4d22-87e9-22853629057d' THEN 'البيلسان-مدينة الملك عبدالله الاقتصادية'
+        WHEN district = 'cc30d02d-3a61-4ac1-af5c-32974d09bc99' THEN 'التاخي-ينبع'
+        WHEN district = 'b67dc17d-206f-4da2-93dc-ad1c36114bf5' THEN 'التحكيم-دومة الجندل'
+        WHEN district = '715a92c0-7a97-4b19-b02b-76f655ff0beb' THEN 'التحلية-الخبر'
+        WHEN district = '7bff84e2-a5ea-49d1-b805-9fd8d83dfc18' THEN 'التحلية-القريات'
+        WHEN district = 'cca4a093-f6d1-4350-91d8-5a294e68208c' THEN 'التحلية-املج'
+        WHEN district = '5f9f7e72-4047-441e-9696-c06bc8804e2a' THEN 'التحلية-عنيزة'
+        WHEN district = '046da9e3-2e4f-4532-aa13-a96a4668b793' THEN 'التشاليح-النعيرية'
+        WHEN district = 'f43fc11a-0687-4880-8a33-0e138ec3b2d4' THEN 'التشليح-بريدة'
+        WHEN district = '630bcd5c-7cd9-4163-b068-64a4e610310c' THEN 'التضامن-بيشة'
+        WHEN district = '6fcb6de7-a7c8-4edc-b068-4fa092a7c0ef' THEN 'التضامن-جدة'
+        WHEN district = '2ecfa970-13cf-481b-b9d3-2dd153f2b97b' THEN 'التضامن-حوطة بني تميم'
+        WHEN district = 'e7d1465a-6806-4e75-9751-fe7bca0c6bc3' THEN 'التعاون-الخبر'
+        WHEN district = '121e9f85-4240-4210-b925-3a9436741e4d' THEN 'التعاون-الخفجي'
+        WHEN district = 'd39f52a7-b5ca-47f4-ad04-91435d0cf961' THEN 'التعاون-الرياض'
+        WHEN district = '76e76c13-3a80-4303-88bb-5ce3634645f6' THEN 'التعاون-تثليث'
+        WHEN district = 'de926bf6-74fc-4d6a-9c0a-1c3572ae7b12' THEN 'التعاون-جدة'
+        WHEN district = '68ead265-4dbf-408e-ac28-e38a06fd9b88' THEN 'التعاون-رياض الخبراء'
+        WHEN district = 'ff2ac857-6a27-4da8-8ef6-d61eab1a836f' THEN 'التعاون-ينبع'
+        WHEN district = '25918b91-1a0a-458c-affb-60ff5ca538db' THEN 'التعليم-البدائع'
+        WHEN district = '153ed885-f4c0-4591-b948-cca4f47330a9' THEN 'التعليم-الرس'
+        WHEN district = 'bdf7e28d-802e-477f-8355-26e91c771881' THEN 'التغيرة-بريدة'
+        WHEN district = '1594da63-62cb-490b-a1b7-8c625177f5ba' THEN 'التقدم-المجاردة'
+        WHEN district = '356ccea2-d310-4d8e-a6ba-a3b75f833c20' THEN 'التقوى-مكة المكرمة'
+        WHEN district = '0e276619-ef95-417f-8481-b06922a8e186' THEN 'التلال-حفر الباطن'
+        WHEN district = 'f41bb726-d6de-4a32-9995-7d8171d6060e' THEN 'التلال-صفوى'
+        WHEN district = 'e5cf7d2a-dfc9-4d4b-ac9e-02b21db9c967' THEN 'التنعيم-مكة المكرمة'
+        WHEN district = 'b2db9ec8-fc03-4dd2-be84-e302f0f79caf' THEN 'التوبي-القطيف'
+        WHEN district = '1e25ce60-5531-456d-a4f4-10ccdf7effa8' THEN 'التوفيق-بريدة'
+        WHEN district = '5c498a0a-bff1-4405-b806-fab26d0dda3d' THEN 'التيسير-مكة المكرمة'
+        WHEN district = '92a8d0c3-629d-47f0-8136-125fba6f76bf' THEN 'الثريا-القطيف'
+        WHEN district = '40a06e28-bead-4f67-8e40-5650a4eaaf79' THEN 'الثعالبة-جدة'
+        WHEN district = '32b75831-1350-47d6-a781-86f7d95fbcfe' THEN 'الثغر-جدة'
+        WHEN district = '099e37e2-266a-4e9a-b990-f013e4e7c427' THEN 'الثقافة-عنيزة'
+        WHEN district = '5babb0bd-8b76-480e-8034-530eed3408dd' THEN 'الثقبة-الخبر'
+        WHEN district = '0c435c8a-2164-4603-9276-7a9bb56e87e2' THEN 'الجابرة-المدينة المنورة'
+        WHEN district = '432f6da7-ea15-4c7c-bb8f-ec857ad2ca3b' THEN 'الجابرية-ينبع'
+        WHEN district = '2bc8f911-bef5-4f8c-853a-73311c02042c' THEN 'الجار-ينبع'
+        WHEN district = '99e0e464-1770-4307-824b-74de617a997c' THEN 'الجارودية-القطيف'
+        WHEN district = 'af3a4c4e-8fde-4003-8685-1f689379ea1b' THEN 'الجال-الشماسية'
+        WHEN district = '5e256c35-e4a6-4f4f-b47b-82096d2cc57d' THEN 'الجامعة العربية-ينبع'
+        WHEN district = '2195bded-d952-417d-a03e-9da7526511f7' THEN 'الجامعة-الظهران'
+        WHEN district = '464099bc-ecbe-483d-ba3b-9cfb5c84b2b7' THEN 'الجامعة-المدينة المنورة'
+        WHEN district = '3c3bd117-ec7a-407c-9caa-7e00b95d702b' THEN 'الجامعة-جدة'
+        WHEN district = '8678c996-35df-4d2b-ba8b-733fe9bc66b0' THEN 'الجامعة-حفر الباطن'
+        WHEN district = '8cc70db1-c117-468e-8e2a-6c34a3b9f7dc' THEN 'الجامعة-مكة المكرمة'
+        WHEN district = '349d68b4-e4d4-4f18-a6ca-7c92d942003c' THEN 'الجامعة-ينبع'
+        WHEN district = 'd733b75a-6681-4970-aaf9-d1a4c03f37bf' THEN 'الجامعي-عنيزة'
+        WHEN district = 'e4ebae56-a64a-42d8-9088-6ce79aa60414' THEN 'الجامعيين-الدمام'
+        WHEN district = '5a50c0c8-8fb8-4d48-92a8-de2cc71f5efa' THEN 'الجامعيين-المجمعة'
+        WHEN district = 'bd6538d2-3852-4c7e-a446-104dfea4fbc9' THEN 'الجامعيين-الهفوف'
+        WHEN district = '6e2c97eb-aa99-47ab-9170-25e09d353b68' THEN 'الجامعيين-بريدة'
+        WHEN district = '7d542465-1803-402f-b33f-b054d6417c75' THEN 'الجامعيين-تاروت'
+        WHEN district = '23698ded-8221-43df-bf3a-980b2f28385d' THEN 'الجبل-تاروت'
+        WHEN district = '10ac6fdb-df46-4ef7-8bfa-994c0e15ef5a' THEN 'الجبل-جازان'
+        WHEN district = '857ccae3-8dae-4683-ab21-3f9b2f71d0c5' THEN 'الجبيل البلد-الجبيل'
+        WHEN district = '8c7378e3-5061-4734-b812-d48c91eee5ad' THEN 'الجديد-بدر'
+        WHEN district = '1a758062-5ebd-4b17-956d-13ce08ff7238' THEN 'الجديدة-المذنب'
+        WHEN district = 'dd547152-691f-4e84-8c15-f24f575c188d' THEN 'الجرادية-الرياض'
+        WHEN district = 'ebb02c56-0055-4950-b329-f3bc15505b6c' THEN 'الجرادية-صامطة'
+        WHEN district = 'ac727987-7302-48ca-ada7-c1707432aeb6' THEN 'الجراري-القطيف'
+        WHEN district = 'eae5afe9-c550-4f21-b254-624a4ab39084' THEN 'الجربة-نجران'
+        WHEN district = '5cbb32ab-799a-416a-80af-62f07a35ddc8' THEN 'الجردة-بريدة'
+        WHEN district = '20f79e54-07bc-40f8-abb6-883eb6ee577a' THEN 'الجردية-صامطة'
+        WHEN district = '50c64886-3616-479c-9213-2b439021b059' THEN 'الجرعاوي-دومة الجندل'
+        WHEN district = '7f0f6f46-cbb4-49b4-8bf6-5955969bbac3' THEN 'الجزيرة-الرياض'
+        WHEN district = '46b41de9-0b1d-4fee-8998-7509097913ce' THEN 'الجزيرة-القطيف'
+        WHEN district = 'f1318657-29e2-49fd-9597-dcde7fb9e80b' THEN 'الجزيرة-القويعية'
+        WHEN district = '7f4f03fc-bbb6-4031-b7b6-6023c4abd1c6' THEN 'الجزيرة-خميس مشيط'
+        WHEN district = '97a77f7c-7eff-4807-afdd-a6968d8cd63c' THEN 'الجزيرة-عنيزة'
+        WHEN district = '5a3df58e-ba52-47c6-8e93-8d97e73665b5' THEN 'الجسر-الخبر'
+        WHEN district = 'ec1b6565-ceae-41ba-bd42-b16fdb9af0c6' THEN 'الجش-عنك'
+        WHEN district = 'c2c4b116-0d3a-4506-8055-c9a10a82e44b' THEN 'الجشة-الهفوف'
+        WHEN district = '031484f5-25f2-4341-916f-b55e2a6f6587' THEN 'الجصة-المدينة المنورة'
+        WHEN district = '968be339-35f4-46aa-92bb-54e1cc99f59f' THEN 'الجفونية-القويعية'
+        WHEN district = 'e4d87209-250b-4e51-a4e9-8416698d63d3' THEN 'الجفيدرية-ليلى'
+        WHEN district = 'd6e8cce2-faa5-4f1c-a7a9-642cb9241331' THEN 'الجلده-عنيزة'
+        WHEN district = '5af7ca07-9bcf-440f-a8c5-9fa819d72a52' THEN 'الجلوية-الدمام'
+        WHEN district = '46545a85-6117-4d1e-a5f5-a932825e39d3' THEN 'الجماوات-المدينة المنورة'
+        WHEN district = '0d12605f-1ebc-422e-852f-5a9c794ab0d2' THEN 'الجمعة-المدينة المنورة'
+        WHEN district = '6f169000-6b08-4e8f-8189-ec76e4867ac2' THEN 'الجميزة-مكة المكرمة'
+        WHEN district = 'b3065990-dd3b-4220-90e0-c86475a074d4' THEN 'الجميماء-رفحاء'
+        WHEN district = '2eb6569f-f4fa-4280-8de6-98aff9cb6335' THEN 'الجميمة-القطيف'
+        WHEN district = '94651e16-e6a7-4f54-86ad-30a094fa95b6' THEN 'الجنادرية-الرياض'
+        WHEN district = '22e57387-1d19-4617-b8fb-ebec5ad95beb' THEN 'الجنادرية-ثادق'
+        WHEN district = '140f8bba-f87e-45fd-a0db-7d9ed46080c0' THEN 'الجنادرية-محايل'
+        WHEN district = '58a2a2f6-4135-48ad-b9fb-00291bf4172f' THEN 'الجندل-الرس'
+        WHEN district = '77f28c7b-c45f-4f43-aca0-a55ee33268eb' THEN 'الجواهر-القطيف'
+        WHEN district = '0738284a-caea-4359-8b5e-3fa4df4387e9' THEN 'الجوهرة-الخبر'
+        WHEN district = 'a14ab889-6616-4a73-b236-f8bc7c11ac09' THEN 'الجوهرة-الخفجي'
+        WHEN district = 'e099f5ab-b29a-4752-a993-ef37a261486e' THEN 'الجوهرة-الدمام'
+        WHEN district = '5441199a-f385-4825-8de4-07a68dc33002' THEN 'الجوهرة-تاروت'
+        WHEN district = 'd6f93c94-e01e-4c80-a889-b050e29cbc5f' THEN 'الجوهرة-جدة'
+        WHEN district = 'ed0d1028-68cc-4db1-b25f-af3260c74968' THEN 'الجوهرة-عنيزة'
+        WHEN district = '9896b543-c6b7-4b6f-b1c0-09765579bb9f' THEN 'الحائر-الرياض'
+        WHEN district = '11b6ca99-d909-4ae4-b849-8dc15285646a' THEN 'الحاجب-عنيزة'
+        WHEN district = '6349abf6-f3e3-4b8d-9112-fc45815cbeb3' THEN 'الحارثية-الخرمة'
+        WHEN district = '07dac6bc-7fe4-49eb-928e-52c72763f74f' THEN 'الحازم-الباحة'
+        WHEN district = 'ca2609ee-49e8-46a1-94af-5e4ff01df086' THEN 'الحاوية-الباحة'
+        WHEN district = 'd265ec3d-efce-441a-8dbf-383df4658976' THEN 'الحجاج-عفيف'
+        WHEN district = '49d75cf8-7758-4548-8450-43951c15ccb3' THEN 'الحجاز-الجبيل'
+        WHEN district = '8302c021-b6d6-4406-b917-baf5ebe1c1f1' THEN 'الحجاز-تثليث'
+        WHEN district = 'f3cdb407-92b7-4561-99d5-460fbaae5d81' THEN 'الحجون-مكة المكرمة'
+        WHEN district = 'b1ecf0ed-1516-44c1-8b37-dca3d841c7e2' THEN 'الحدائق-ينبع'
+        WHEN district = '1d2067f3-e637-4701-8883-5c2064c63828' THEN 'الحديقة-الخرمة'
+        WHEN district = 'a122bd81-804d-4cc5-947e-34cf662a60a2' THEN 'الحديقة-المدينة المنورة'
+        WHEN district = '6339c85c-088e-4505-8489-7fdcae7dfa82' THEN 'الحديقة-عنيزة'
+        WHEN district = '9ddbb673-92f3-4866-ba93-ddf24c1432aa' THEN 'الحرس الوطني-الظهران'
+        WHEN district = 'e9e6e209-b918-47d1-9a92-f97544a4c944' THEN 'الحرس الوطني-ينبع'
+        WHEN district = '47d17d5b-03cc-4cd2-8fa9-355fff7f7d46' THEN 'الحرم-المدينة المنورة'
+        WHEN district = '1c1062c3-73e9-4f66-ad11-568ef57f0f2f' THEN 'الحرم-مكة المكرمة'
+        WHEN district = 'e53181c8-3711-4bbc-92f5-7baf8c7c2511' THEN 'الحرمين-الدوادمي'
+        WHEN district = '6b1fae53-7d87-4a1e-b8c2-81b97f8f1103' THEN 'الحزام الاخضر-الخبر'
+        WHEN district = '301e4377-dc1a-4def-abc2-d38a42a3f329' THEN 'الحزام الذهبي-الخبر'
+        WHEN district = '568fd9ac-4ff1-4ea9-96b8-d15d08d87329' THEN 'الحزم-الخرمة'
+        WHEN district = '5cf2ba45-d5e0-48bd-b2d4-e4e7c2d5995a' THEN 'الحزم-الرس'
         ELSE d.NameEn
     END AS district,
-properties_educational_levels AS educational_levels,
-properties_email AS email,
-properties_face_to_face_price AS face_to_face_price,
-properties_first_name AS first_name,
-properties_full_name AS full_name,
-properties_gender AS gender,
-properties_hours_dedicated_to_algooru AS hours_dedicated_to_algooru,
-properties_hs_all_accessible_team_ids AS hs_all_accessible_team_ids,
-properties_hs_all_assigned_business_unit_ids AS hs_all_assigned_business_unit_ids,
-properties_hs_all_owner_ids AS hs_all_owner_ids,
-properties_hs_all_team_ids AS hs_all_team_ids,
-properties_hs_created_by_user_id AS hs_created_by_user_id,
-properties_hs_createdate AS hs_createdate,
-properties_hs_date_entered_51018060 AS hs_date_entered_51018060,
-properties_hs_date_entered_51018061 AS hs_date_entered_51018061,
-properties_hs_date_entered_55867986 AS hs_date_entered_55867986,
-properties_hs_date_entered_55867987 AS hs_date_entered_55867987,
-properties_hs_date_entered_55884175 AS hs_date_entered_55884175,
-properties_hs_date_entered_55909999 AS hs_date_entered_55909999,
-properties_hs_date_entered_55910000 AS hs_date_entered_55910000,
-properties_hs_date_entered_55910001 AS hs_date_entered_55910001,
-properties_hs_date_exited_51018060 AS hs_date_exited_51018060,
-properties_hs_date_exited_51018061 AS hs_date_exited_51018061,
-properties_hs_date_exited_55867986 AS hs_date_exited_55867986,
-properties_hs_date_exited_55867987 AS hs_date_exited_55867987,
-properties_hs_date_exited_55884175 AS hs_date_exited_55884175,
-properties_hs_date_exited_55909999 AS hs_date_exited_55909999,
-properties_hs_date_exited_55910000 AS hs_date_exited_55910000,
-properties_hs_date_exited_55910001 AS hs_date_exited_55910001,
-properties_hs_lastmodifieddate AS hs_lastmodifieddate,
-properties_hs_merged_object_ids AS hs_merged_object_ids,
-properties_hs_object_id AS hs_object_id,
-properties_hs_object_source AS hs_object_source,
-properties_hs_object_source_id AS hs_object_source_id,
-properties_hs_object_source_label AS hs_object_source_label,
-properties_hs_object_source_user_id AS hs_object_source_user_id,
-properties_hs_pinned_engagement_id AS hs_pinned_engagement_id,
+educational_levels AS educational_levels,
+a.email AS email,
+face_to_face_price AS face_to_face_price,
+first_name AS first_name,
+full_name AS full_name,
+a.gender AS gender,
+hours_dedicated_to_algooru AS hours_dedicated_to_algooru,
+hs_all_accessible_team_ids AS hs_all_accessible_team_ids,
+hs_all_assigned_business_unit_ids AS hs_all_assigned_business_unit_ids,
+hs_all_owner_ids AS hs_all_owner_ids,
+hs_all_team_ids AS hs_all_team_ids,
+hs_created_by_user_id AS hs_created_by_user_id,
+hs_createdate AS hs_createdate,
+hs_date_entered_51018060 AS hs_date_entered_51018060,
+hs_date_entered_51018061 AS hs_date_entered_51018061,
+hs_date_entered_55867986 AS hs_date_entered_55867986,
+hs_date_entered_55867987 AS hs_date_entered_55867987,
+hs_date_entered_55884175 AS hs_date_entered_55884175,
+hs_date_entered_55909999 AS hs_date_entered_55909999,
+hs_date_entered_55910000 AS hs_date_entered_55910000,
+hs_date_entered_55910001 AS hs_date_entered_55910001,
+hs_date_exited_51018060 AS hs_date_exited_51018060,
+hs_date_exited_51018061 AS hs_date_exited_51018061,
+hs_date_exited_55867986 AS hs_date_exited_55867986,
+hs_date_exited_55867987 AS hs_date_exited_55867987,
+hs_date_exited_55884175 AS hs_date_exited_55884175,
+hs_date_exited_55909999 AS hs_date_exited_55909999,
+hs_date_exited_55910000 AS hs_date_exited_55910000,
+hs_date_exited_55910001 AS hs_date_exited_55910001,
+hs_lastmodifieddate AS hs_lastmodifieddate,
+hs_merged_object_ids AS hs_merged_object_ids,
+hs_object_id AS hs_object_id,
+hs_object_source AS hs_object_source,
+hs_object_source_id AS hs_object_source_id,
+hs_object_source_label AS hs_object_source_label,
+hs_object_source_user_id AS hs_object_source_user_id,
+hs_pinned_engagement_id AS hs_pinned_engagement_id,
 case 
-when properties_hs_pipeline = '21183759' then 'internal_tutors_pipeline'
-when properties_hs_pipeline = '23779724' then 'customer_experience'
+when hs_pipeline = '21183759' then 'internal_tutors_pipeline'
+when hs_pipeline = '23779724' then 'customer_experience'
 else null end as hs_pipeline,
 case 
-when properties_hs_pipeline_stage = '51018060' then 'it_approved_onboarded'
-when properties_hs_pipeline_stage = '51018061' then 'it_under_probation'
-when properties_hs_pipeline_stage = '55884175' then 'it_archived'
-when properties_hs_pipeline_stage = '55867986' then 'cx_created'
-when properties_hs_pipeline_stage = '55867987' then 'cx_application_completed'
-when properties_hs_pipeline_stage = '55909999' then 'cx_pending_screening'
-when properties_hs_pipeline_stage = '55910000' then 'cx_archived'
-when properties_hs_pipeline_stage = '55910001' then 'cx_move_to_internal_community'
+when hs_pipeline_stage = '51018060' then 'it_approved_onboarded'
+when hs_pipeline_stage = '51018061' then 'it_under_probation'
+when hs_pipeline_stage = '55884175' then 'it_archived'
+when hs_pipeline_stage = '55867986' then 'cx_created'
+when hs_pipeline_stage = '55867987' then 'cx_application_completed'
+when hs_pipeline_stage = '55909999' then 'cx_pending_screening'
+when hs_pipeline_stage = '55910000' then 'cx_archived'
+when hs_pipeline_stage = '55910001' then 'cx_move_to_internal_community'
 else null end as hs_pipeline_stage,
-properties_hs_read_only AS hs_read_only,
-properties_hs_time_in_51018060 AS hs_time_in_51018060,
-properties_hs_time_in_51018061 AS hs_time_in_51018061,
-properties_hs_time_in_55867986 AS hs_time_in_55867986,
-properties_hs_time_in_55867987 AS hs_time_in_55867987,
-properties_hs_time_in_55884175 AS hs_time_in_55884175,
-properties_hs_time_in_55909999 AS hs_time_in_55909999,
-properties_hs_time_in_55910000 AS hs_time_in_55910000,
-properties_hs_time_in_55910001 AS hs_time_in_55910001,
-properties_hs_unique_creation_key AS hs_unique_creation_key,
-properties_hs_updated_by_user_id AS hs_updated_by_user_id,
-properties_hs_user_ids_of_all_notification_followers AS hs_user_ids_of_all_notification_followers,
-properties_hs_user_ids_of_all_notification_unfollowers AS hs_user_ids_of_all_notification_unfollowers,
-properties_hs_user_ids_of_all_owners AS hs_user_ids_of_all_owners,
-properties_hs_was_imported AS hs_was_imported,
-properties_hubspot_owner_assigneddate AS hubspot_owner_assigneddate,
-properties_hubspot_owner_id AS hubspot_owner_id,
-properties_hubspot_team_id AS hubspot_team_id,
-properties_iban AS iban,
-properties_last_name AS last_name,
-properties_location_link AS location_link,
-properties_major AS major,
+hs_read_only AS hs_read_only,
+hs_time_in_51018060 AS hs_time_in_51018060,
+hs_time_in_51018061 AS hs_time_in_51018061,
+hs_time_in_55867986 AS hs_time_in_55867986,
+hs_time_in_55867987 AS hs_time_in_55867987,
+hs_time_in_55884175 AS hs_time_in_55884175,
+hs_time_in_55909999 AS hs_time_in_55909999,
+hs_time_in_55910000 AS hs_time_in_55910000,
+hs_time_in_55910001 AS hs_time_in_55910001,
+hs_unique_creation_key AS hs_unique_creation_key,
+hs_updated_by_user_id AS hs_updated_by_user_id,
+hs_user_ids_of_all_notification_followers AS hs_user_ids_of_all_notification_followers,
+hs_user_ids_of_all_notification_unfollowers AS hs_user_ids_of_all_notification_unfollowers,
+hs_user_ids_of_all_owners AS hs_user_ids_of_all_owners,
+hs_was_imported AS hs_was_imported,
+hubspot_owner_assigneddate AS hubspot_owner_assigneddate,
+hubspot_owner_id AS hubspot_owner_id,
+hubspot_team_id AS hubspot_team_id,
+iban AS iban,
+last_name AS last_name,
+location_link AS location_link,
+major AS major,
 CASE
-        WHEN properties_nationality = 'e2713628-9bae-4eca-b181-439dd4b6f9b1' THEN 'Afghan'
-        WHEN properties_nationality = 'ca9b1d72-f1b6-410b-bce7-d9ed779affa9' THEN 'Albanian'
-        WHEN properties_nationality = '716f9c2c-2f8d-4e6d-903e-9827b6b8401d' THEN 'Algerian'
-        WHEN properties_nationality = '4d8e58d6-b4f6-452f-8f81-98160c5e11df' THEN 'American'
-        WHEN properties_nationality = '2f0768ee-876d-4486-94ca-78bd8df4f872' THEN 'Argentine'
-        WHEN properties_nationality = 'dc9cf11c-c25b-41b2-83d0-4e3633fdefae' THEN 'Australian'
-        WHEN properties_nationality = '1fe24330-1cf1-481a-b945-da52c64968db' THEN 'Austrian'
-        WHEN properties_nationality = '26be3c44-9794-4225-833c-b1ee8c67e3a0' THEN 'Bangladeshi'
-        WHEN properties_nationality = 'd4dc1626-efbf-4235-b30c-c19f8b9c5e2e' THEN 'Batswana'
-        WHEN properties_nationality = '6511b935-b361-4451-8033-4e7c7308d4d3' THEN 'Belgian'
-        WHEN properties_nationality = '6a8e1779-d496-4960-b2b9-38cc60c47b0f' THEN 'Bolivian'
-        WHEN properties_nationality = '94f66106-bd73-442d-957e-67cfa012e8d6' THEN 'Brazilian'
-        WHEN properties_nationality = 'd792e71c-7de6-415f-943d-53db38370c9a' THEN 'British'
-        WHEN properties_nationality = '01bbbcb7-fc35-46bb-8218-845b7c082ba7' THEN 'Bulgarian'
-        WHEN properties_nationality = '16f401a6-4004-42c4-a505-d7550f803f44' THEN 'Cambodian'
-        WHEN properties_nationality = '29d295a6-6a66-4931-8bfd-d721bcc5f3c2' THEN 'Cameroonian'
-        WHEN properties_nationality = '29ea80ff-b66c-4d0f-a675-8186db14414d' THEN 'Canadian'
-        WHEN properties_nationality = '2f1cf2aa-b66c-4707-9cb0-f0b264b51efe' THEN 'Chilean'
-        WHEN properties_nationality = 'b717b612-5e37-4160-9aa9-c9ba840ae1f7' THEN 'Chinese'
-        WHEN properties_nationality = '3d78014e-485e-4435-bcc4-ae4037030ab2' THEN 'Colombian'
-        WHEN properties_nationality = '4cfcc506-5af9-4b6a-86b7-1e53c69f94ea' THEN 'Costa Rican'
-        WHEN properties_nationality = 'b5f8ddef-1352-4c03-b918-2bc0b25eb09c' THEN 'Croatian'
-        WHEN properties_nationality = 'f5302222-11ce-46c7-8f8d-cc8a312a3ece' THEN 'Cuban'
-        WHEN properties_nationality = '3c05da75-4169-47a2-a93a-d0847a2dffec' THEN 'Czech'
-        WHEN properties_nationality = '6a857736-c630-4aa9-af9f-d2388f66bb4d' THEN 'Danish'
-        WHEN properties_nationality = '9b7448f2-3c2a-4817-906d-55c0a49641de' THEN 'Dominican'
-        WHEN properties_nationality = 'cc37977f-d402-4372-806c-ea4cab3aa1d2' THEN 'Dutch'
-        WHEN properties_nationality = '80d36c78-4072-4a8a-a5a9-4097c1557846' THEN 'Ecuadorian'
-        WHEN properties_nationality = '49b9072e-44e9-43e1-a07a-36d3e9851d2b' THEN 'Egyptian'
-        WHEN properties_nationality = 'c97ecd1a-8176-40e4-b2e1-e7a959d3f29b' THEN 'Emirati'
-        WHEN properties_nationality = 'f9f9189f-46f6-4d67-a83e-1412d4f97c50' THEN 'Estonian'
-        WHEN properties_nationality = '58a25ffe-11fd-4d9f-abbd-ae551533b4c7' THEN 'Ethiopian'
-        WHEN properties_nationality = '059f449a-89ab-470b-824d-1f5fcac3e3d7' THEN 'Fijian'
-        WHEN properties_nationality = 'f641af35-ac3b-4dd9-b946-f2c522e39a05' THEN 'Finnish'
-        WHEN properties_nationality = '912ecd02-a1af-430c-bbe9-903b3acc0a2c' THEN 'French'
-        WHEN properties_nationality = 'b6fb6c1f-4761-44c4-acb6-91a292c73bc6' THEN 'German'
-        WHEN properties_nationality = 'ee85a2a9-0c10-44b5-8009-6b108cedc423' THEN 'Ghanaian'
-        WHEN properties_nationality = 'f63b6119-3fde-40d8-8251-0f002b08d902' THEN 'Greek'
-        WHEN properties_nationality = '54efff58-9cf7-4c38-87c0-431628c9550b' THEN 'Guatemalan'
-        WHEN properties_nationality = '4f1bb494-d4d6-4cec-a6fc-d55126316c31' THEN 'Haitian'
-        WHEN properties_nationality = 'b530f797-91d7-4c49-a3fa-faae2befd14c' THEN 'Honduran'
-        WHEN properties_nationality = '02ce4006-0205-4f47-9124-cd1ee434ac2a' THEN 'Hungarian'
-        WHEN properties_nationality = '961b6887-dd3f-4f20-8299-1a29dfe1e1e6' THEN 'Icelandic'
-        WHEN properties_nationality = '3cca1e74-8637-4a80-bfd5-bdf54b6bbf61' THEN 'Indian'
-        WHEN properties_nationality = '2aee876f-8058-4dd8-8c62-598221c9bd77' THEN 'Indonesian'
-        WHEN properties_nationality = '2043a0c3-4fe6-4275-b08e-b5e4f9aa4999' THEN 'Iranian'
-        WHEN properties_nationality = '2cb5d0dd-059b-40da-9d3d-32222772bf8e' THEN 'Iraqi'
-        WHEN properties_nationality = 'e94f61d3-b2a0-440b-a657-b6cdd2628f01' THEN 'Irish'
-        WHEN properties_nationality = '05310800-a64f-456f-8f64-65039a3063ac' THEN 'Italian'
-        WHEN properties_nationality = '45342709-5862-4a14-8dad-784f50de3ed6' THEN 'Jamaican'
-        WHEN properties_nationality = '512324b0-3ea2-4b0f-bc08-53f33c29c0d7' THEN 'Japanese'
-        WHEN properties_nationality = '5cef156b-1a90-47ba-827b-f23aaf077330' THEN 'Jordanian'
-        WHEN properties_nationality = '6f090ce1-cc5d-480f-a15a-ce2cca2b1ba5' THEN 'Kenyan'
-        WHEN properties_nationality = '892e0250-1055-482a-88d0-507364c3b176' THEN 'Korean'
-        WHEN properties_nationality = 'b136ad05-ae03-4b10-95fc-fef76d45b4aa' THEN 'Kuwaiti'
-        WHEN properties_nationality = '137d62ab-79d0-4827-bd8e-53f95e1148fe' THEN 'Lao'
-        WHEN properties_nationality = '0f3427cb-35ca-4612-9475-804f42d72f0a' THEN 'Latvian'
-        WHEN properties_nationality = '8a61e89e-4212-4fdb-a427-46114c6734c2' THEN 'Lebanese'
-        WHEN properties_nationality = 'd38626a6-75bd-4448-b198-a7dc29a39d90' THEN 'Libyan'
-        WHEN properties_nationality = '9bdc51ef-7fb3-4560-ab52-bf93193855d0' THEN 'Lithuanian'
-        WHEN properties_nationality = 'c6613f55-3c2a-48b1-865e-6036d218fc01' THEN 'Malagasy'
-        WHEN properties_nationality = 'ccb6e3d0-4052-4e68-98dc-4ea11332ebe3' THEN 'Malaysian'
-        WHEN properties_nationality = '0008b20d-4838-4f17-a73c-feba0c28d668' THEN 'Malian'
-        WHEN properties_nationality = '6cd973e7-2ddd-4425-8270-b4375cae5979' THEN 'Maltese'
-        WHEN properties_nationality = '66f48cd5-492e-405d-9b52-bec48d2c41f3' THEN 'Mexican'
-        WHEN properties_nationality = '0ca30508-e4e3-4ccb-9115-4fd19cc1d12f' THEN 'Mongolian'
-        WHEN properties_nationality = '7d7eccf2-e386-4a06-aa72-6ec415b9d76c' THEN 'Moroccan'
-        WHEN properties_nationality = 'ab0d178e-b5f9-42ab-bbd0-409cf1a18319' THEN 'Mozambican'
-        WHEN properties_nationality = '4e5f2f37-316b-4b3d-ae7b-157e12f9078c' THEN 'Namibian'
-        WHEN properties_nationality = 'ed13e847-65eb-4967-9a24-e1f9d6827c57' THEN 'Nepalese'
-        WHEN properties_nationality = '1057ea24-fc8f-4abf-8bfe-10f70000ddf8' THEN 'New Zealand'
-        WHEN properties_nationality = '27b2f056-c64f-45ae-a7b8-83744748e42a' THEN 'Nicaraguan'
-        WHEN properties_nationality = '2d25cf6a-d714-41ee-abd3-0e6b83946e58' THEN 'Nigerian'
-        WHEN properties_nationality = '4b9c47db-7634-11ed-b39c-0ec1056ad15a' THEN 'Nigerien'
-        WHEN properties_nationality = '9e97409e-55ab-406d-8642-313bb79ec60a' THEN 'Norwegian'
-        WHEN properties_nationality = 'f64768a5-6369-41cc-b727-0860c459a72d' THEN 'Pakistani'
-        WHEN properties_nationality = '53410965-7634-11ed-b39c-0ec1056ad15a' THEN 'Palestinian'
-        WHEN properties_nationality = '681639d6-4b12-49d4-b5a5-f58ee132dd80' THEN 'Panamanian'
-        WHEN properties_nationality = '9e7a2460-363d-4333-9b26-94134820652a' THEN 'Paraguayan'
-        WHEN properties_nationality = '760cdf93-7c56-439f-b6fe-2c2e193c6ec0' THEN 'Peruvian'
-        WHEN properties_nationality = '5c8403dc-ceb2-4c5c-9830-a03795698e06' THEN 'Philippine'
-        WHEN properties_nationality = '763b5e3b-d716-4344-aa6c-88ee1b9d9bf3' THEN 'Polish'
-        WHEN properties_nationality = 'e58ca478-bab9-4a65-9b33-1a392c4a6e40' THEN 'Portuguese'
-        WHEN properties_nationality = 'e5a78e17-ce51-4a4d-a92b-378570fd9c5e' THEN 'Romanian'
-        WHEN properties_nationality = 'e8d92274-35f3-47b0-b07f-0fc7200303de' THEN 'Russian'
-        WHEN properties_nationality = 'b7695662-4e60-47c0-b21e-a4432a68e986' THEN 'Salvadorian'
-        WHEN properties_nationality = 'bf869f49-2ba5-45d3-a336-7e1beea45641' THEN 'Saudi'
-        WHEN properties_nationality = 'd9bbb272-8260-424b-98e7-c9b9b05b876a' THEN 'Scottish'
-        WHEN properties_nationality = '937caf3d-8217-4964-9206-729bbffab421' THEN 'Senegalese'
-        WHEN properties_nationality = 'e236d930-1351-41a5-b4c5-fc1ca401473a' THEN 'Serbian'
-        WHEN properties_nationality = '9ff8c652-f2f6-4fb2-a908-1efef9898525' THEN 'Singaporean'
-        WHEN properties_nationality = 'dcb7a775-cff3-4aef-b6d5-c641355fccb5' THEN 'Slovak'
-        WHEN properties_nationality = '2bcbac90-1a69-432d-9429-745be12c483b' THEN 'South African'
-        WHEN properties_nationality = '77cf7f76-cd3b-4fc7-b02d-ee50fe65f47e' THEN 'Spanish'
-        WHEN properties_nationality = 'ba64f7c1-476f-4e49-b838-6325fc627a81' THEN 'Sri Lankan'
-        WHEN properties_nationality = '2fa6c77a-fe93-4127-8c4a-52a472737e99' THEN 'Sudanese'
-        WHEN properties_nationality = '22d34783-afa6-4896-a971-396c5aa8d627' THEN 'Swedish'
-        WHEN properties_nationality = '7cb859cd-e316-4d3e-be74-e6d3d0f4a74c' THEN 'Swiss'
-        WHEN properties_nationality = '5cd9cc4e-88f0-4374-8f33-0927389d840c' THEN 'Syrian'
-        WHEN properties_nationality = '173f6798-3347-4c81-a70c-78ceab64f0b5' THEN 'Taiwanese'
-        WHEN properties_nationality = 'db841724-80b1-4fae-bbac-737b24a4e95c' THEN 'Tajikistani'
-        WHEN properties_nationality = '789e54af-25c3-4c47-bc63-1915629742af' THEN 'Thai'
-        WHEN properties_nationality = 'fdd446a2-5deb-4fd2-99be-3fc73b6a2352' THEN 'Tongan'
-        WHEN properties_nationality = 'c0c4e72a-c806-4509-9c13-5b8333adc4e8' THEN 'Tunisian'
-        WHEN properties_nationality = '209f1bcd-18a9-479e-a696-7de9395da559' THEN 'Turkish'
-        WHEN properties_nationality = '8efa430c-2ef8-4711-984e-2d48e3791f77' THEN 'Ukrainian'
-        WHEN properties_nationality = '6b3a7f28-2d31-4c4a-bbbb-637583fc7958' THEN 'Uruguayan'
-        WHEN properties_nationality = 'f29fa935-4418-465f-9729-159cc6d990f5' THEN 'Venezuelan'
-        WHEN properties_nationality = '96b58bd2-d55d-4ddf-a731-e3166a285559' THEN 'Vietnamese'
-        WHEN properties_nationality = '44a316a2-7634-11ed-b39c-0ec1056ad15a' THEN 'Yemeni'
-        WHEN properties_nationality = '0ce2006d-5517-4b75-bdcb-27a9e9e5f538' THEN 'Zambian'
-        WHEN properties_nationality = '1da78b67-e423-411f-a536-e7b097fc4097' THEN 'Zimbabwean'
-        WHEN properties_nationality = '0008b20d-4838-4f17-a73c-feba0c28d660' THEN 'Burmese'
-        WHEN properties_nationality = 'fdd446a2-5deb-4fd2-99be-3fc73b6a2111' THEN 'Eritrean'
-        else properties_nationality end as nationality,
-properties_not_available_during as not_available_during,
-SAFE_CAST(properties_onboarding_date AS DATE) as onboarding_date,
-properties_online_price AS online_price,
-properties_other_major AS other_major,
-properties_other_nationality AS other_nationality,
-properties_other_subject AS other_subject,
-properties_other_tutoring_languages AS other_tutoring_languages,
-properties_owed_compensation AS owed_compensation,
-properties_owed_compensation__tempo AS owed_compensation__tempo,
-properties_owed_hours AS owed_hours,
-properties_owed_hours__temp AS owed_hours__temp,
-properties_paid_compensation AS paid_compensation,
-properties_payment_method AS payment_method,
-properties_preferred_gender AS preferred_gender,
-properties_promocode AS promocode,
-properties_ps_certified AS ps_certified,
-properties_region AS region,
-properties_session_type AS session_type,
-properties_source AS source,
-properties_stc_number AS stc_number,
-properties_subjects AS subjects,
-properties_subjects_ranking AS subjects_ranking,
-properties_swift_code AS swift_code,
-properties_total_executed_hours AS total_executed_hours,
-properties_total_executed_hours_temp AS total_executed_hours_temp,
-properties_total_owed_compensation_temp AS total_owed_compensation_temp,
-properties_trial_gooru AS trial_gooru,
-properties_trial_offline_price AS trial_offline_price,
-properties_trial_online_price AS trial_online_price,
-properties_ts_face_to_face_price AS ts_face_to_face_price,
-properties_ts_online_price AS ts_online_price,
-properties_uni___offline_package_price as uni_offline_price,
-properties_tutor_applicant_id AS tutor_applicant_id,
-properties_tutor_application_id AS tutor_application_id,
-properties_tutor_card AS tutor_card,
-properties_tutoring_language AS tutoring_language,
-properties_tutors_university_level AS tutors_university_level,
-properties_tutortype AS tutortype,
-properties_university_price AS university_price,
-properties_university_subjects AS university_subjects,
-properties_willing_to_drive AS willing_to_drive,
-properties_willing_to_host AS willing_to_host,
-properties_wish_number AS wish_number,
-properties_years_of_experience AS years_of_experience,
+        WHEN nationality = 'e2713628-9bae-4eca-b181-439dd4b6f9b1' THEN 'Afghan'
+        WHEN nationality = 'ca9b1d72-f1b6-410b-bce7-d9ed779affa9' THEN 'Albanian'
+        WHEN nationality = '716f9c2c-2f8d-4e6d-903e-9827b6b8401d' THEN 'Algerian'
+        WHEN nationality = '4d8e58d6-b4f6-452f-8f81-98160c5e11df' THEN 'American'
+        WHEN nationality = '2f0768ee-876d-4486-94ca-78bd8df4f872' THEN 'Argentine'
+        WHEN nationality = 'dc9cf11c-c25b-41b2-83d0-4e3633fdefae' THEN 'Australian'
+        WHEN nationality = '1fe24330-1cf1-481a-b945-da52c64968db' THEN 'Austrian'
+        WHEN nationality = '26be3c44-9794-4225-833c-b1ee8c67e3a0' THEN 'Bangladeshi'
+        WHEN nationality = 'd4dc1626-efbf-4235-b30c-c19f8b9c5e2e' THEN 'Batswana'
+        WHEN nationality = '6511b935-b361-4451-8033-4e7c7308d4d3' THEN 'Belgian'
+        WHEN nationality = '6a8e1779-d496-4960-b2b9-38cc60c47b0f' THEN 'Bolivian'
+        WHEN nationality = '94f66106-bd73-442d-957e-67cfa012e8d6' THEN 'Brazilian'
+        WHEN nationality = 'd792e71c-7de6-415f-943d-53db38370c9a' THEN 'British'
+        WHEN nationality = '01bbbcb7-fc35-46bb-8218-845b7c082ba7' THEN 'Bulgarian'
+        WHEN nationality = '16f401a6-4004-42c4-a505-d7550f803f44' THEN 'Cambodian'
+        WHEN nationality = '29d295a6-6a66-4931-8bfd-d721bcc5f3c2' THEN 'Cameroonian'
+        WHEN nationality = '29ea80ff-b66c-4d0f-a675-8186db14414d' THEN 'Canadian'
+        WHEN nationality = '2f1cf2aa-b66c-4707-9cb0-f0b264b51efe' THEN 'Chilean'
+        WHEN nationality = 'b717b612-5e37-4160-9aa9-c9ba840ae1f7' THEN 'Chinese'
+        WHEN nationality = '3d78014e-485e-4435-bcc4-ae4037030ab2' THEN 'Colombian'
+        WHEN nationality = '4cfcc506-5af9-4b6a-86b7-1e53c69f94ea' THEN 'Costa Rican'
+        WHEN nationality = 'b5f8ddef-1352-4c03-b918-2bc0b25eb09c' THEN 'Croatian'
+        WHEN nationality = 'f5302222-11ce-46c7-8f8d-cc8a312a3ece' THEN 'Cuban'
+        WHEN nationality = '3c05da75-4169-47a2-a93a-d0847a2dffec' THEN 'Czech'
+        WHEN nationality = '6a857736-c630-4aa9-af9f-d2388f66bb4d' THEN 'Danish'
+        WHEN nationality = '9b7448f2-3c2a-4817-906d-55c0a49641de' THEN 'Dominican'
+        WHEN nationality = 'cc37977f-d402-4372-806c-ea4cab3aa1d2' THEN 'Dutch'
+        WHEN nationality = '80d36c78-4072-4a8a-a5a9-4097c1557846' THEN 'Ecuadorian'
+        WHEN nationality = '49b9072e-44e9-43e1-a07a-36d3e9851d2b' THEN 'Egyptian'
+        WHEN nationality = 'c97ecd1a-8176-40e4-b2e1-e7a959d3f29b' THEN 'Emirati'
+        WHEN nationality = 'f9f9189f-46f6-4d67-a83e-1412d4f97c50' THEN 'Estonian'
+        WHEN nationality = '58a25ffe-11fd-4d9f-abbd-ae551533b4c7' THEN 'Ethiopian'
+        WHEN nationality = '059f449a-89ab-470b-824d-1f5fcac3e3d7' THEN 'Fijian'
+        WHEN nationality = 'f641af35-ac3b-4dd9-b946-f2c522e39a05' THEN 'Finnish'
+        WHEN nationality = '912ecd02-a1af-430c-bbe9-903b3acc0a2c' THEN 'French'
+        WHEN nationality = 'b6fb6c1f-4761-44c4-acb6-91a292c73bc6' THEN 'German'
+        WHEN nationality = 'ee85a2a9-0c10-44b5-8009-6b108cedc423' THEN 'Ghanaian'
+        WHEN nationality = 'f63b6119-3fde-40d8-8251-0f002b08d902' THEN 'Greek'
+        WHEN nationality = '54efff58-9cf7-4c38-87c0-431628c9550b' THEN 'Guatemalan'
+        WHEN nationality = '4f1bb494-d4d6-4cec-a6fc-d55126316c31' THEN 'Haitian'
+        WHEN nationality = 'b530f797-91d7-4c49-a3fa-faae2befd14c' THEN 'Honduran'
+        WHEN nationality = '02ce4006-0205-4f47-9124-cd1ee434ac2a' THEN 'Hungarian'
+        WHEN nationality = '961b6887-dd3f-4f20-8299-1a29dfe1e1e6' THEN 'Icelandic'
+        WHEN nationality = '3cca1e74-8637-4a80-bfd5-bdf54b6bbf61' THEN 'Indian'
+        WHEN nationality = '2aee876f-8058-4dd8-8c62-598221c9bd77' THEN 'Indonesian'
+        WHEN nationality = '2043a0c3-4fe6-4275-b08e-b5e4f9aa4999' THEN 'Iranian'
+        WHEN nationality = '2cb5d0dd-059b-40da-9d3d-32222772bf8e' THEN 'Iraqi'
+        WHEN nationality = 'e94f61d3-b2a0-440b-a657-b6cdd2628f01' THEN 'Irish'
+        WHEN nationality = '05310800-a64f-456f-8f64-65039a3063ac' THEN 'Italian'
+        WHEN nationality = '45342709-5862-4a14-8dad-784f50de3ed6' THEN 'Jamaican'
+        WHEN nationality = '512324b0-3ea2-4b0f-bc08-53f33c29c0d7' THEN 'Japanese'
+        WHEN nationality = '5cef156b-1a90-47ba-827b-f23aaf077330' THEN 'Jordanian'
+        WHEN nationality = '6f090ce1-cc5d-480f-a15a-ce2cca2b1ba5' THEN 'Kenyan'
+        WHEN nationality = '892e0250-1055-482a-88d0-507364c3b176' THEN 'Korean'
+        WHEN nationality = 'b136ad05-ae03-4b10-95fc-fef76d45b4aa' THEN 'Kuwaiti'
+        WHEN nationality = '137d62ab-79d0-4827-bd8e-53f95e1148fe' THEN 'Lao'
+        WHEN nationality = '0f3427cb-35ca-4612-9475-804f42d72f0a' THEN 'Latvian'
+        WHEN nationality = '8a61e89e-4212-4fdb-a427-46114c6734c2' THEN 'Lebanese'
+        WHEN nationality = 'd38626a6-75bd-4448-b198-a7dc29a39d90' THEN 'Libyan'
+        WHEN nationality = '9bdc51ef-7fb3-4560-ab52-bf93193855d0' THEN 'Lithuanian'
+        WHEN nationality = 'c6613f55-3c2a-48b1-865e-6036d218fc01' THEN 'Malagasy'
+        WHEN nationality = 'ccb6e3d0-4052-4e68-98dc-4ea11332ebe3' THEN 'Malaysian'
+        WHEN nationality = '0008b20d-4838-4f17-a73c-feba0c28d668' THEN 'Malian'
+        WHEN nationality = '6cd973e7-2ddd-4425-8270-b4375cae5979' THEN 'Maltese'
+        WHEN nationality = '66f48cd5-492e-405d-9b52-bec48d2c41f3' THEN 'Mexican'
+        WHEN nationality = '0ca30508-e4e3-4ccb-9115-4fd19cc1d12f' THEN 'Mongolian'
+        WHEN nationality = '7d7eccf2-e386-4a06-aa72-6ec415b9d76c' THEN 'Moroccan'
+        WHEN nationality = 'ab0d178e-b5f9-42ab-bbd0-409cf1a18319' THEN 'Mozambican'
+        WHEN nationality = '4e5f2f37-316b-4b3d-ae7b-157e12f9078c' THEN 'Namibian'
+        WHEN nationality = 'ed13e847-65eb-4967-9a24-e1f9d6827c57' THEN 'Nepalese'
+        WHEN nationality = '1057ea24-fc8f-4abf-8bfe-10f70000ddf8' THEN 'New Zealand'
+        WHEN nationality = '27b2f056-c64f-45ae-a7b8-83744748e42a' THEN 'Nicaraguan'
+        WHEN nationality = '2d25cf6a-d714-41ee-abd3-0e6b83946e58' THEN 'Nigerian'
+        WHEN nationality = '4b9c47db-7634-11ed-b39c-0ec1056ad15a' THEN 'Nigerien'
+        WHEN nationality = '9e97409e-55ab-406d-8642-313bb79ec60a' THEN 'Norwegian'
+        WHEN nationality = 'f64768a5-6369-41cc-b727-0860c459a72d' THEN 'Pakistani'
+        WHEN nationality = '53410965-7634-11ed-b39c-0ec1056ad15a' THEN 'Palestinian'
+        WHEN nationality = '681639d6-4b12-49d4-b5a5-f58ee132dd80' THEN 'Panamanian'
+        WHEN nationality = '9e7a2460-363d-4333-9b26-94134820652a' THEN 'Paraguayan'
+        WHEN nationality = '760cdf93-7c56-439f-b6fe-2c2e193c6ec0' THEN 'Peruvian'
+        WHEN nationality = '5c8403dc-ceb2-4c5c-9830-a03795698e06' THEN 'Philippine'
+        WHEN nationality = '763b5e3b-d716-4344-aa6c-88ee1b9d9bf3' THEN 'Polish'
+        WHEN nationality = 'e58ca478-bab9-4a65-9b33-1a392c4a6e40' THEN 'Portuguese'
+        WHEN nationality = 'e5a78e17-ce51-4a4d-a92b-378570fd9c5e' THEN 'Romanian'
+        WHEN nationality = 'e8d92274-35f3-47b0-b07f-0fc7200303de' THEN 'Russian'
+        WHEN nationality = 'b7695662-4e60-47c0-b21e-a4432a68e986' THEN 'Salvadorian'
+        WHEN nationality = 'bf869f49-2ba5-45d3-a336-7e1beea45641' THEN 'Saudi'
+        WHEN nationality = 'd9bbb272-8260-424b-98e7-c9b9b05b876a' THEN 'Scottish'
+        WHEN nationality = '937caf3d-8217-4964-9206-729bbffab421' THEN 'Senegalese'
+        WHEN nationality = 'e236d930-1351-41a5-b4c5-fc1ca401473a' THEN 'Serbian'
+        WHEN nationality = '9ff8c652-f2f6-4fb2-a908-1efef9898525' THEN 'Singaporean'
+        WHEN nationality = 'dcb7a775-cff3-4aef-b6d5-c641355fccb5' THEN 'Slovak'
+        WHEN nationality = '2bcbac90-1a69-432d-9429-745be12c483b' THEN 'South African'
+        WHEN nationality = '77cf7f76-cd3b-4fc7-b02d-ee50fe65f47e' THEN 'Spanish'
+        WHEN nationality = 'ba64f7c1-476f-4e49-b838-6325fc627a81' THEN 'Sri Lankan'
+        WHEN nationality = '2fa6c77a-fe93-4127-8c4a-52a472737e99' THEN 'Sudanese'
+        WHEN nationality = '22d34783-afa6-4896-a971-396c5aa8d627' THEN 'Swedish'
+        WHEN nationality = '7cb859cd-e316-4d3e-be74-e6d3d0f4a74c' THEN 'Swiss'
+        WHEN nationality = '5cd9cc4e-88f0-4374-8f33-0927389d840c' THEN 'Syrian'
+        WHEN nationality = '173f6798-3347-4c81-a70c-78ceab64f0b5' THEN 'Taiwanese'
+        WHEN nationality = 'db841724-80b1-4fae-bbac-737b24a4e95c' THEN 'Tajikistani'
+        WHEN nationality = '789e54af-25c3-4c47-bc63-1915629742af' THEN 'Thai'
+        WHEN nationality = 'fdd446a2-5deb-4fd2-99be-3fc73b6a2352' THEN 'Tongan'
+        WHEN nationality = 'c0c4e72a-c806-4509-9c13-5b8333adc4e8' THEN 'Tunisian'
+        WHEN nationality = '209f1bcd-18a9-479e-a696-7de9395da559' THEN 'Turkish'
+        WHEN nationality = '8efa430c-2ef8-4711-984e-2d48e3791f77' THEN 'Ukrainian'
+        WHEN nationality = '6b3a7f28-2d31-4c4a-bbbb-637583fc7958' THEN 'Uruguayan'
+        WHEN nationality = 'f29fa935-4418-465f-9729-159cc6d990f5' THEN 'Venezuelan'
+        WHEN nationality = '96b58bd2-d55d-4ddf-a731-e3166a285559' THEN 'Vietnamese'
+        WHEN nationality = '44a316a2-7634-11ed-b39c-0ec1056ad15a' THEN 'Yemeni'
+        WHEN nationality = '0ce2006d-5517-4b75-bdcb-27a9e9e5f538' THEN 'Zambian'
+        WHEN nationality = '1da78b67-e423-411f-a536-e7b097fc4097' THEN 'Zimbabwean'
+        WHEN nationality = '0008b20d-4838-4f17-a73c-feba0c28d660' THEN 'Burmese'
+        WHEN nationality = 'fdd446a2-5deb-4fd2-99be-3fc73b6a2111' THEN 'Eritrean'
+        else nationality end as nationality,
+not_available_during as not_available_during,
+SAFE_CAST(onboarding_date AS DATE) as onboarding_date,
+online_price AS online_price,
+a.other_major AS other_major,
+other_nationality AS other_nationality,
+other_subject AS other_subject,
+other_tutoring_languages AS other_tutoring_languages,
+a.owed_compensation AS owed_compensation,
+owed_compensation__tempo AS owed_compensation__tempo,
+a.owed_hours AS owed_hours,
+owed_hours__temp AS owed_hours__temp,
+paid_compensation AS paid_compensation,
+payment_method AS payment_method,
+preferred_gender AS preferred_gender,
+promocode AS promocode,
+ps_certified AS ps_certified,
+region AS region,
+session_type AS session_type,
+a.source AS source,
+stc_number AS stc_number,
+subjects AS subjects,
+subjects_ranking AS subjects_ranking,
+swift_code AS swift_code,
+a.total_executed_hours AS total_executed_hours,
+total_executed_hours_temp AS total_executed_hours_temp,
+total_owed_compensation_temp AS total_owed_compensation_temp,
+trial_gooru AS trial_gooru,
+trial_offline_price AS trial_offline_price,
+trial_online_price AS trial_online_price,
+ts_face_to_face_price AS ts_face_to_face_price,
+ts_online_price AS ts_online_price,
+uni___offline_package_price as uni_offline_price,
+tutor_applicant_id AS tutor_applicant_id,
+tutor_application_id AS tutor_application_id,
+tutor_card AS tutor_card,
+tutoring_language AS tutoring_language,
+tutors_university_level AS tutors_university_level,
+a.tutortype AS tutortype,
+university_price AS university_price,
+university_subjects AS university_subjects,
+willing_to_drive AS willing_to_drive,
+willing_to_host AS willing_to_host,
+a.wish_number AS wish_number,
+years_of_experience AS years_of_experience,
 b.id as internal_dashboard_id
 from
-`al-gooru.hubspot.hubspot_Approved_Tutors` a
-left join ${ref('id_tutors_prod_dataform')} b on a.id = b.approvedTutorHubspotId
-left join al-gooru.staging.id_countries c on c.id=a.properties_city 
-left join al-gooru.staging.id_countries d on d.id=a.properties_district
+`al-gooru.staging.hubspot_approvedtutors_staging_dataform` a
+left join (select approvedTutorHubspotId,max(id) as id from ${ref('id_tutors_prod_dataform')} group by all) b 
+on a.id = b.approvedTutorHubspotId
+left join al-gooru.hubspot.id_countries c on c.id=a.city 
+left join al-gooru.hubspot.id_countries d on d.id=a.district
