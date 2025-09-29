@@ -568,7 +568,7 @@ WITH
     whatsapp_group_link_2 AS whatsapp_group_link_2,
     whatsapp_group_link_3 AS whatsapp_group_link_3
   FROM
-    `al-gooru.raw.hubspot_deals_raw_dataform`, 
+    ${ref('hubspot_deals_raw_dataform')}, 
 UNNEST(JSON_QUERY_ARRAY(contacts)) AS contact
 group by all)
 
