@@ -66,6 +66,7 @@ accepted_date,
 approved_tutor_pipeline_stage,
 other_major,
 is_subjects_ranked,
-show_schedule_reminder
+show_schedule_reminder,
+whish_account_id
 from
 ${ref('id_tutors_raw_dataform')}
