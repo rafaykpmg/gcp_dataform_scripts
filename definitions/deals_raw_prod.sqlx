@@ -430,6 +430,7 @@ WITH
     prospect_curriculum AS prospect_curriculum,
     prospect_grade AS prospect_grade,
     prospect_location AS prospect_location,
+    location_name as location_name,
     prospect_location_offline AS prospect_location_offline,
     prospect_preferred_gender AS prospect_preferred_gender,
     psa_initiated_created_at AS psa_initiated_created_at,

@@ -529,6 +529,7 @@ round(safe_divide(SAFE_CAST(first_payment_amount__sales_ as float64) , 3.75),2) 
   prospect_curriculum AS prospect_curriculum,
   prospect_grade AS prospect_grade,
   prospect_location AS prospect_location,
+  location_name AS location_name,
   coalesce(prospect_location,address) AS prospect_location_offline,
   prospect_preferred_gender AS prospect_preferred_gender,
   psa_initiated_created_at AS psa_initiated_created_at,
