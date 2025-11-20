@@ -41,7 +41,7 @@ WITH
     closedate AS closedate,
     closing_sales_owner AS closing_sales_owner,
     CASE 
-    WHEN closing_sales_owner_new = '2039548444' THEN 'Strategy AlGooru'
+    WHEN closing_sales_owner_new = '203954844' THEN 'Strategy AlGooru'
     WHEN closing_sales_owner_new = '209682051'  THEN 'Reem Atma'
     WHEN closing_sales_owner_new = '227361098'  THEN 'Marina Jeha'
     WHEN closing_sales_owner_new = '229980177'  THEN 'Khalil Khodor'
