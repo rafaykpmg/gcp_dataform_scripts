@@ -1,0 +1,12 @@
+config {
+    type: "incremental",
+    schema: "raw",
+    name: "association_subdeals_raw_dataform",
+    tags: ["subdeals_pipeline"],
+    protected : true ,
+    uniqueKey : ['subdeal_id']
+}
+
+select 
+*
+from al-gooru.raw.association_subdeals_hubspot

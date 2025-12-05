@@ -144,7 +144,7 @@ FROM
 select a.*,CAST(b.associated_deal_id AS INT64) as associated_deal_id,
 CAST( b.associated_approved_tutor_id AS INT64) as  associated_approved_tutor_id, c.contract_type
 from cte a
-left join `al-gooru.raw.association_subdeals_hubspot` b
+left join ${ref('association_subdeals_raw_dataform')} b
 on a.subdeal_id = CAST(b.subdeal_id AS INT64)
 left join ${ref('ftt_pftt_tutor_list')} c
 on b.associated_approved_tutor_id = c.hs_id and 
