@@ -1,0 +1,296 @@
+config {
+    type: "table",
+    schema: "production",
+    name: "slack_daily_performance_reporting",
+    description: "Add 3 hours to all the timestamps",
+    tags: ["deals_pipeline"]
+}
+with dates as (
+  SELECT
+  DATE_TRUNC(CURRENT_DATE(), WEEK(SATURDAY)) AS max_date,
+  DATE_SUB(DATE_TRUNC(CURRENT_DATE(), WEEK(SATURDAY)), INTERVAL 6 DAY) AS min_date
+)
+,total_days_cte as (
+  select a.Date as target_month, max(b.Day) total_days, marketing_budget,leads,cpl,cvr*100 as cvr,marketing_cac,sales_packages_sold,aov,revenue_sales,retention_packages_sold,revenue_retention, tutor_tools, merchant_fees
+  from `al-gooru.production.metric_targets` a
+  left join al-gooru.production.dim_date b
+  on extract(month from a.Date) = b.Month and extract(year from a.Date) = b.Year 
+  group by all
+  order by 1
+)
+
+, final_daily_target_cte as (
+select a.target_month,a.total_days,b.Date,FORMAT_DATE('%V', b.Date) AS week_of_year, a.marketing_budget/a.total_days as marketing_budget_daily, a.leads/a.total_days as leads_daily, cpl, cvr, marketing_cac, a.sales_packages_sold/a.total_days as sales_packages_sold_daily, aov, a.revenue_sales/a.total_days as revenue_sales_daily, a.retention_packages_sold/a.total_days as retention_packages_sold_daily, a.revenue_retention/a.total_days as revenue_retention_daily, a.tutor_tools/a.total_days as tutor_tools_daily, a.merchant_fees/a.total_days as merchant_fees_daily
+from total_days_cte a
+left join al-gooru.production.dim_date b
+on extract(month from a.target_month) = b.Month and extract(year from a.target_month) = b.Year
+)
+
+, ad_spend as (
+  select date, sum(cost_usd) as total_marketing_spend_daily
+  from `al-gooru.production.marketing_growth_spend_final`
+  where date >= '2024-01-01'
+  group by all
+  order by 1
+)
+
+
+, cte_leads as (
+  select date(deal_created_at) as deal_created_at, count(distinct deal_id) as total_sales_leads_daily 
+  from  `al-gooru.production.prod_fact_deals` 
+  where source not in ('cross-sold client', 'renewed client', 'up-sold client')
+  #and (closed_lost_reason NOT IN ('invalid/wrong number','duplicate lead/existing client','lead is a kid','') or closed_lost_reason IS NULL or closed_lost_reason  in ('',' '))
+  AND (closed_lost_reason NOT IN ('invalid/wrong number','duplicate lead/existing client','lead is a kid','lead is a confused tutor') or closed_lost_reason IS NULL or closed_lost_reason  in ('',' '))
+  and pipeline in ('sales_pipeline','customer experience', 'webinar pipeline')
+  group by all
+  order by 1
+)
+
+,cte_revenue as (
+  SELECT
+    package_start_date, count(distinct deal_id) as total_packages,
+    #FORMAT_TIMESTAMP("%Y-%m-01", package_start_date)  AS Session_Month,
+    ROUND(SUM(amount_paid), 2) AS total_revenue_daily
+  FROM `al-gooru.production.prod_fact_deals` 
+  WHERE package_start_date >= '2024-01-01' and 
+  package_start_date < CURRENT_DATE() AND amount_paid > 0
+  GROUP BY all
+  )
+
+, converted_leads as (
+  select package_start_date,
+  #FORMAT_TIMESTAMP("%Y-%m-01", package_start_date) as conv_month, 
+  sum(converted_flag) as total_conversions_daily
+  from  ${ref('prod_fact_deals')}
+  group by all
+  order by 1
+)
+
+, sales_pckgs as (
+  select package_start_date, ROUND(SUM(amount_paid), 2) AS total_sales_revenue_daily,
+  #FORMAT_TIMESTAMP("%Y-%m-01", package_start_date) as conv_month, 
+  sum(converted_flag) as sales_conversions 
+  from  ${ref('prod_fact_deals')}
+  where source not in ('cross-sold client', 'renewed client', 'up-sold client')
+  group by all
+  order by 1
+)
+
+, retention_pckgs as (
+  select package_start_date, ROUND(SUM(amount_paid), 2) AS total_retention_revenue_daily,
+  #FORMAT_TIMESTAMP("%Y-%m-01", package_start_date) as conv_month, 
+  sum(converted_flag) as retention_conversions 
+  from ${ref('prod_fact_deals')} 
+  where source in ('cross-sold client', 'renewed client', 'up-sold client')
+  group by all
+  order by 1
+)
+
+,sessions as (
+  select date(created_at) create_date,count(*) as total_sessions
+  from ${ref('id_completedsessions_prod_dataform')}
+  where date(created_at)>='2025-07-01'
+  group by 1
+)
+
+,tickets as (
+  with current_check as (
+select 
+ticket_id,
+  created_at,
+  REGEXP_CONTAINS(TRIM(LOWER(cx_status)), r'resolved$')
+  OR REGEXP_CONTAINS(TRIM(LOWER(tutor_ticket_status)), r'resolved$') AS is_resolved
+    from ${ref('hubspot_tickets_prod_dataform')}
+    where date(created_at)>='2025-01-01'
+)
+
+  SELECT
+    date(created_at) as ticket_date,
+    COUNT(DISTINCT ticket_id) AS total_tickets,
+    COUNT(DISTINCT IF(is_resolved, ticket_id, NULL)) AS resolved,
+    COUNT(DISTINCT ticket_id) - COUNT(DISTINCT IF(is_resolved, ticket_id, NULL)) AS unresolved
+  FROM current_check
+  group by all
+
+)
+
+,refunds as (
+  WITH refunds_curr AS (
+  SELECT
+    DATE(created_at) AS create_date,
+    ticket_id,
+    COALESCE(refund_reason, Null) AS refund_reason,
+    SAFE_CAST(amount_refunded AS FLOAT64)*(1/3.65) AS amount_refunded
+  FROM ${ref('hubspot_tickets_prod_dataform')}
+  WHERE refund_requested = 'Yes'
+    AND SAFE_CAST(amount_refunded AS FLOAT64) > 0
+    and DATE(created_at)>='2025-07-01'
+),
+reason_counts AS (
+  SELECT
+    create_date,
+    refund_reason,
+    COUNT(DISTINCT ticket_id) AS reason_count
+  FROM refunds_curr
+  GROUP BY create_date, refund_reason
+),
+daily_totals AS (
+  SELECT
+    create_date,
+    COUNT(DISTINCT ticket_id) AS total_refunds,
+    ROUND(SUM(amount_refunded), 0) AS total_refund_amount
+  FROM refunds_curr
+  GROUP BY create_date
+),
+
+reason_strings AS (
+  SELECT
+    create_date,
+    STRING_AGG(
+      CONCAT(refund_reason, ' | ', CAST(reason_count AS STRING)),
+      ';\n'
+      ORDER BY refund_reason
+    ) AS refund_reason_breakdown
+  FROM reason_counts
+  GROUP BY create_date
+)
+
+SELECT
+  d.create_date,
+  d.total_refunds,
+  d.total_refund_amount,
+  r.refund_reason_breakdown
+FROM daily_totals d
+JOIN reason_strings r USING (create_date)
+)
+
+,cvr_cte as (
+  select 
+  *
+  from al-gooru.bizops_dataset.HS_CVR_Daily 
+  where month>='2025-01-01'
+)
+,ltv_cte as (
+  select 
+  week,avg_ltv_d120,avg_ltv_d180,avg_ltv_d60
+  from al-gooru.bizops_dataset.Cohorted_LTV
+)
+, final_cte as (
+
+select a.target_month, a.total_days, a.Date,a.week_of_year, a.marketing_budget_daily, b.total_marketing_spend_daily, a.leads_daily, c.total_sales_leads_daily as total_generated_leads, a.sales_packages_sold_daily, d.sales_conversions as total_sales_packages, a.revenue_sales_daily,safe_divide(d.total_sales_revenue_daily,1.15) as total_sales_revenue,a.retention_packages_sold_daily,safe_divide(total_retention_revenue_daily,1.15) as total_retention_revenue, e.retention_conversions as total_retention_packages,f.total_packages, safe_divide(f.total_revenue_daily,1.15) as total_revenue, a.cpl, a.cvr, a.marketing_cac, a.aov, a.tutor_tools_daily, a.merchant_fees_daily, a.revenue_retention_daily as target_revenue_retention_daily,
+t.total_tickets, t.resolved as resolved_tickets, t.unresolved as unresolved_tickets,
+s.total_sessions,
+r.total_refunds,r.total_refund_amount,r.refund_reason_breakdown,
+cv.cvr as sales_cvr,cv.sc_cvr as self_cvr,cv.leads as sales_leads ,cv.overall_leads-cv.leads as self_leads,
+cv.overall_leads,cv.converted as sales_converted,cv.sc_converted as self_converted,cv.overall_converted,
+td.revenue_sales,td.revenue_retention,
+ltv.avg_ltv_d120,ltv.avg_ltv_d180,ltv.avg_ltv_d60,
+
+from final_daily_target_cte a
+left join ad_spend b on a.Date= b.date
+left join cte_leads c on a.Date = c.deal_created_at
+left join sales_pckgs d on a.Date = d.package_start_date
+left join retention_pckgs e on a.Date = e.package_start_date
+left join cte_revenue f on a.Date = f.package_start_date
+left join tickets t on a.date=t.ticket_date
+left join sessions s on a.date=s.create_date
+left join refunds r on a.date=r.create_date
+left join cvr_cte cv on DATE(cv.Date)=a.Date
+left join total_days_cte td on td.target_month=a.date
+left join ltv_cte ltv on ltv.week=a.date
+
+-- where a.Date = '2025-09-24'
+order by 1,3
+)
+, weekly_report as (
+  select 
+  concat(dates.min_date,' - ',dates.max_date) as week,
+  FORMAT("%'d",sum(total_sessions)) as total_sessions,
+  FORMAT("$%'.0f",round(sum(total_revenue),0)) as total_revenue,
+  FORMAT("%'d",sum(total_packages)) as total_packages,
+  FORMAT("%'d",sum(overall_leads)) as total_leads,
+  FORMAT("%'d",sum(sales_leads)) as total_sales_leads,
+  FORMAT("%'d",sum(self_leads)) as total_self_leads,
+  FORMAT("%'d",sum(total_tickets)) as total_tickets,
+  FORMAT("%'d",sum(resolved_tickets)) as resolved_tickets,
+  FORMAT("%.0f%%",ROUND(SAFE_DIVIDE(SUM(resolved_tickets), SUM(total_tickets))*100, 0))  AS resolution_rate,
+  FORMAT("%'d",sum(total_refunds)) as total_refunds,
+  FORMAT("$%'.0f",round(sum(total_refund_amount),0)) as refund_amount,
+  FORMAT("$%'.0f",round(sum(avg_ltv_d60),0)) as ltv_d60,
+  FORMAT("$%'.0f",round(sum(avg_ltv_d120),0)) as ltv_d120,
+  FORMAT("$%'.0f",round(sum(avg_ltv_d180),0)) as ltv_d180,
+  -- refund_reason_breakdown
+  from final_cte,dates
+  where date>=dates.min_date and date<=dates.max_date
+  group by 1
+  -- ,refund_reason_breakdown
+)
+
+,monthly_report as (
+  select 
+  concat(dates.min_date,' - ',dates.max_date) as week,
+  FORMAT("%'d",sum(total_sessions)) as total_monthly_sessions,
+  FORMAT("%.0f%%",round(safe_divide(sum(total_revenue),sum(revenue_sales)+sum(revenue_retention))*100,1)) as target_rate,
+  FORMAT("%.0f%%",round(safe_divide(count(distinct date),max(EXTRACT(DAY FROM LAST_DAY(dates.min_date))))*100,1)) as progress,
+  FORMAT("$%'d",CAST(round(sum(total_marketing_spend_daily),0) as int64)) as monthly_ad_spend,
+  FORMAT("%.1f%%",round(safe_divide(sum(total_marketing_spend_daily),sum(total_revenue))*100,1)) as ad_spend_rate,
+  FORMAT("$%'d",CAST(round(sum(total_revenue),0) as int64)) as total_monthly_revenue,
+  FORMAT("%.0f%%",round(safe_divide(sum(total_sales_revenue),sum(total_revenue))*100,0)) as acquisition_revenue_rate,
+  FORMAT("%.0f%%",round(safe_divide(sum(total_retention_revenue),sum(total_revenue))*100,0)) as retention_revenue_rate,
+  FORMAT("%'d",sum(total_packages)) as total_monthly_packages,
+  FORMAT("%.0f%%",round(safe_divide(sum(total_sales_packages),sum(total_packages))*100,0)) as acquisition_package_rate,
+  FORMAT("%.0f%%",round(safe_divide(sum(total_retention_packages),sum(total_packages))*100,0)) as retention_package_rate,
+  FORMAT("%'d",sum(overall_leads)) as total_monthly_leads,
+  FORMAT("$%'.0f",ROUND(SAFE_DIVIDE(SUM(total_revenue), SUM(total_packages)), 0))  AS AOV,
+  FORMAT("$%'.2f",ROUND(SAFE_DIVIDE(SUM(total_marketing_spend_daily), SUM(total_generated_leads)), 2)) AS CPL,
+  FORMAT("%.2f%%",ROUND(100 * (SAFE_DIVIDE(SUM(overall_converted),SUM(overall_leads))), 2))  AS CVR,
+  FORMAT("%.2f%%",ROUND(100 * (SAFE_DIVIDE(SUM(self_converted),SUM(self_leads))), 2))  AS self_CVR,
+  FORMAT("%.2f%%",ROUND(100 * (SAFE_DIVIDE(SUM(sales_converted),SUM(sales_leads))), 2))  AS sales_CVR,
+  FORMAT("$%'.0f",ROUND(SAFE_DIVIDE(SUM(total_marketing_spend_daily), SUM(total_sales_packages)), 0))  AS CAC,
+  FORMAT("$%'.0f",round(sum(total_refund_amount),0)) as total_refund_amount,
+  FORMAT("%.1f%%",round(safe_divide(sum(total_refund_amount),sum(total_revenue))*100,1)) as refund_amount_rate,
+  from final_cte,dates
+  where date>=(select date_trunc(min_date,Month) from dates) and date<=(select if(LAST_DAY(min_date)<=max_date,LAST_DAY(min_date),max_date) from dates)
+  group by all
+)
+select 
+total_sessions,
+b.total_monthly_sessions,
+total_revenue,
+b.total_monthly_revenue,
+b.target_rate,
+b.progress,
+b.acquisition_revenue_rate,
+b.retention_revenue_rate,
+total_packages,
+b.total_monthly_packages,
+b.acquisition_package_rate,
+b.retention_package_rate,
+AOV,
+b.monthly_ad_spend,
+b.ad_spend_rate,
+total_leads,
+b.total_monthly_leads,
+total_sales_leads,
+total_self_leads,
+CPL,
+CVR,
+self_CVR,
+sales_CVR,
+CAC,
+total_tickets,
+resolved_tickets,
+resolution_rate,
+a.total_refunds,
+refund_amount,
+total_refund_amount,
+refund_amount_rate,
+ltv_d60,
+ltv_d120,
+ltv_d180
+-- refund_reason_breakdown
+from weekly_report a
+join monthly_report b using (week)
+
+
+
