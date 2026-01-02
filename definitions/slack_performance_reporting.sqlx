@@ -46,16 +46,35 @@ on extract(month from a.target_month) = b.Month and extract(year from a.target_m
   order by 1
 )
 
+,sub_cte as (
+  SELECT 
+  date(created_at) as package_start_date,
+    COUNT(id) as total_clients,
+    round(safe_divide(sum(price),3.65),0) as revenue
+FROM
+    hubspot.id_course_submissions
+    where status='PAID'
+    -- and date(created_at) >= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) AND date(created_at) < CURRENT_DATE()
+group by all
+)
+
 ,cte_revenue as (
   SELECT
     package_start_date, count(distinct deal_id) as total_packages,
     #FORMAT_TIMESTAMP("%Y-%m-01", package_start_date)  AS Session_Month,
     ROUND(SUM(amount_paid), 2) AS total_revenue_daily
-  FROM `al-gooru.production.prod_fact_deals` 
+  FROM ${ref('prod_fact_deals')} 
   WHERE package_start_date >= '2024-01-01' and 
   package_start_date < CURRENT_DATE() AND amount_paid > 0
   GROUP BY all
   )
+
+,cte_revenue_final as (
+  select a.package_start_date, (a.total_packages+coalesce(b.total_clients,0)) as total_packages, (a.total_revenue_daily+coalesce(b.revenue,0)) as total_revenue_daily
+  from cte_revenue a
+  left join sub_cte b 
+  using (package_start_date)
+)
 
 , converted_leads as (
   select package_start_date,
@@ -175,9 +194,11 @@ JOIN reason_strings r USING (create_date)
   week,avg_ltv_d120,avg_ltv_d180,avg_ltv_d60
   from al-gooru.bizops_dataset.Cohorted_LTV
 )
-, final_cte as (
 
-select a.target_month, a.total_days, a.Date,a.week_of_year, a.marketing_budget_daily, b.total_marketing_spend_daily, a.leads_daily, c.total_sales_leads_daily as total_generated_leads, a.sales_packages_sold_daily, d.sales_conversions as total_sales_packages, a.revenue_sales_daily,safe_divide(d.total_sales_revenue_daily,1.15) as total_sales_revenue,a.retention_packages_sold_daily,safe_divide(total_retention_revenue_daily,1.15) as total_retention_revenue, e.retention_conversions as total_retention_packages,f.total_packages, safe_divide(f.total_revenue_daily,1.15) as total_revenue, a.cpl, a.cvr, a.marketing_cac, a.aov, a.tutor_tools_daily, a.merchant_fees_daily, a.revenue_retention_daily as target_revenue_retention_daily,
+, final_cte as (
+select date_trunc(b.date,month) as  target_month, b.Date, b.total_marketing_spend_daily, c.total_sales_leads_daily as total_generated_leads, d.sales_conversions as total_sales_packages,safe_divide(d.total_sales_revenue_daily,1.15) as total_sales_revenue,safe_divide(total_retention_revenue_daily,1.15) as total_retention_revenue, e.retention_conversions as total_retention_packages,
+f.total_packages,
+safe_divide(f.total_revenue_daily,1.15) as total_revenue,
 t.total_tickets, t.resolved as resolved_tickets, t.unresolved as unresolved_tickets,
 s.total_sessions,
 r.total_refunds,r.total_refund_amount,r.refund_reason_breakdown,
@@ -185,20 +206,20 @@ cv.cvr as sales_cvr,cv.sc_cvr as self_cvr,cv.leads as sales_leads ,cv.overall_le
 cv.overall_leads,cv.converted as sales_converted,cv.sc_converted as self_converted,cv.overall_converted,
 td.revenue_sales,td.revenue_retention,
 ltv.avg_ltv_d120,ltv.avg_ltv_d180,ltv.avg_ltv_d60,
+sc.total_clients as marjala_packages,safe_divide(sc.revenue,1.15) as marjala_revenue
 
-from final_daily_target_cte a
-left join ad_spend b on a.Date= b.date
-left join cte_leads c on a.Date = c.deal_created_at
-left join sales_pckgs d on a.Date = d.package_start_date
-left join retention_pckgs e on a.Date = e.package_start_date
-left join cte_revenue f on a.Date = f.package_start_date
-left join tickets t on a.date=t.ticket_date
-left join sessions s on a.date=s.create_date
-left join refunds r on a.date=r.create_date
-left join cvr_cte cv on DATE(cv.Date)=a.Date
-left join total_days_cte td on td.target_month=a.date
-left join ltv_cte ltv on ltv.week=a.date
-
+from ad_spend b
+left join cte_leads c on b.Date = c.deal_created_at
+left join sales_pckgs d on b.Date = d.package_start_date
+left join retention_pckgs e on b.Date = e.package_start_date
+left join cte_revenue_final f on b.Date = f.package_start_date
+left join tickets t on b.date=t.ticket_date
+left join sessions s on b.date=s.create_date
+left join refunds r on b.date=r.create_date
+left join cvr_cte cv on DATE(cv.Date)=b.Date
+left join total_days_cte td on td.target_month=b.date
+left join ltv_cte ltv on ltv.week=b.date
+left join sub_cte sc on sc.package_start_date=b.date
 -- where a.Date = '2025-09-24'
 order by 1,3
 )
@@ -237,9 +258,11 @@ order by 1,3
   FORMAT("$%'d",CAST(round(sum(total_revenue),0) as int64)) as total_monthly_revenue,
   FORMAT("%.0f%%",round(safe_divide(sum(total_sales_revenue),sum(total_revenue))*100,0)) as acquisition_revenue_rate,
   FORMAT("%.0f%%",round(safe_divide(sum(total_retention_revenue),sum(total_revenue))*100,0)) as retention_revenue_rate,
+  FORMAT("%.0f%%",round(safe_divide(sum(marjala_revenue),sum(total_revenue))*100,0)) as marjala_revenue_rate,
   FORMAT("%'d",sum(total_packages)) as total_monthly_packages,
   FORMAT("%.0f%%",round(safe_divide(sum(total_sales_packages),sum(total_packages))*100,0)) as acquisition_package_rate,
   FORMAT("%.0f%%",round(safe_divide(sum(total_retention_packages),sum(total_packages))*100,0)) as retention_package_rate,
+  FORMAT("%.0f%%",round(safe_divide(sum(marjala_packages),sum(total_packages))*100,0)) as marjala_packages_rate,
   FORMAT("%'d",sum(overall_leads)) as total_monthly_leads,
   FORMAT("$%'.0f",ROUND(SAFE_DIVIDE(SUM(total_revenue), SUM(total_packages)), 0))  AS AOV,
   FORMAT("$%'.2f",ROUND(SAFE_DIVIDE(SUM(total_marketing_spend_daily), SUM(total_generated_leads)), 2)) AS CPL,
@@ -262,10 +285,12 @@ b.target_rate,
 b.progress,
 b.acquisition_revenue_rate,
 b.retention_revenue_rate,
+marjala_revenue_rate,
 total_packages,
 b.total_monthly_packages,
 b.acquisition_package_rate,
 b.retention_package_rate,
+marjala_packages_rate,
 AOV,
 b.monthly_ad_spend,
 b.ad_spend_rate,
@@ -291,6 +316,3 @@ ltv_d180
 -- refund_reason_breakdown
 from weekly_report a
 join monthly_report b using (week)
-
-
-
