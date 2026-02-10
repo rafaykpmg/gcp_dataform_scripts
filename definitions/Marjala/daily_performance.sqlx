@@ -4,88 +4,101 @@ config {
     tags: ["marjala"]
 }
 WITH
+leads_base AS (
+  SELECT DISTINCT
+    DATE(lead_created_at) AS day,
+    submission_id,
+    customer_key
+  FROM ${ref('fact_leads')}
+),
+
+paid_base AS (
+  SELECT
+    DATE(paid_at) AS day,
+    submission_id,
+    customer_key,
+    SUM(SAFE_DIVIDE(amount_paid_in_USD, 1.15)) AS revenue_net
+  FROM ${ref('fact_payments')}
+  WHERE payment_status_bucket = 'paid'
+  GROUP BY 1,2,3
+),
+
+enroll_base AS (
+  SELECT DISTINCT
+    DATE(enrolled_at) AS day,
+    submission_id,
+    customer_key
+  FROM ${ref('fact_enrollments')}
+),
+
+first_lead_customer AS (
+  SELECT
+    customer_key,
+    MIN(day) AS first_lead_day
+  FROM leads_base
+  GROUP BY 1
+),
+
+first_paid_customer AS (
+  SELECT
+    customer_key,
+    MIN(day) AS first_paid_day
+  FROM paid_base
+  GROUP BY 1
+),
 leads_d AS (
   SELECT
-    DATE(lead_created_at) AS day,
-    COUNT(DISTINCT submission_id) AS total_leads,
-    COUNT(DISTINCT customer_key)  AS lead_customers
-  FROM ${ref('fact_leads')}
+    day,
+    COUNT(DISTINCT submission_id) AS total_leads
+  FROM leads_base
   GROUP BY 1
 ),
 
 paid_d AS (
   SELECT
-    DATE(paid_at) AS day,
+    day,
     COUNT(DISTINCT submission_id) AS paid_orders,
-    COUNT(DISTINCT customer_key)  AS paid_customers,
-    SUM(SAFE_DIVIDE(amount_paid_in_USD, 1.15)) AS revenue_net
-  FROM ${ref('fact_payments')}
-  WHERE payment_status_bucket = 'paid'
+    SUM(revenue_net) AS revenue_net
+  FROM paid_base
   GROUP BY 1
 ),
 
 enroll_d AS (
   SELECT
-    DATE(enrolled_at) AS day,
+    date(created_at) day,
     COUNT(DISTINCT submission_id) AS enrolled_orders,
-    COUNT(DISTINCT customer_key)  AS enrolled_customers,
-    COUNT(1) AS seats_sold
+    COUNT(1) AS seats_sold 
   FROM ${ref('fact_enrollments')}
-  GROUP BY 1
-),
-
-first_lead AS (
-  SELECT
-    customer_key,
-    MIN(DATE(lead_created_at)) AS first_lead_day
-  FROM ${ref('fact_leads')}
-  GROUP BY 1
-),
-
-first_paid AS (
-  SELECT
-    customer_key,
-    MIN(DATE(paid_at)) AS first_paid_day
-  FROM ${ref('fact_payments')}
-  WHERE payment_status_bucket = 'paid'
   GROUP BY 1
 ),
 lead_new_returning_d AS (
   SELECT
-    DATE(fl.first_lead_day) AS day,
-    COUNT(DISTINCT fl.customer_key) AS new_lead_customers
-  FROM first_lead fl
+    l.day,
+    COUNT(DISTINCT IF(fl.first_lead_day = l.day, l.submission_id, NULL)) AS new_leads,
+    COUNT(DISTINCT IF(fl.first_lead_day < l.day, l.submission_id, NULL)) AS returning_leads
+  FROM leads_base l
+  JOIN first_lead_customer fl
+    ON fl.customer_key = l.customer_key
   GROUP BY 1
 ),
-
 paid_new_returning_d AS (
   SELECT
-    fp.first_paid_day AS day,
-    COUNT(DISTINCT fp.customer_key) AS new_paid_customers
-  FROM first_paid fp
-  GROUP BY 1
-),
-
-returning_paid_customers_d AS (
-  SELECT
-    DATE(p.paid_at) AS day,
-    COUNT(DISTINCT p.customer_key) AS returning_paid_customers
-  FROM ${ref('fact_payments')} p
-  JOIN first_paid fp
+    p.day,
+    COUNT(DISTINCT IF(fp.first_paid_day = p.day, p.submission_id, NULL)) AS new_paid_packages,
+    COUNT(DISTINCT IF(fp.first_paid_day < p.day, p.submission_id, NULL)) AS returning_paid_packages
+  FROM paid_base p
+  JOIN first_paid_customer fp
     ON fp.customer_key = p.customer_key
-  WHERE p.payment_status_bucket = 'paid'
-    AND fp.first_paid_day < DATE(p.paid_at)
   GROUP BY 1
 ),
-
-returning_lead_customers_d AS (
+same_day_lead_to_paid_d AS (
   SELECT
-    DATE(l.lead_created_at) AS day,
-    COUNT(DISTINCT l.customer_key) AS returning_lead_customers
-  FROM ${ref('fact_leads')} l
-  JOIN first_lead fl
-    ON fl.customer_key = l.customer_key
-  WHERE fl.first_lead_day < DATE(l.lead_created_at)
+    l.day,
+    COUNT(DISTINCT l.submission_id) AS lead_submissions_with_paid_same_day
+  FROM leads_base l
+  JOIN paid_base p
+    ON p.day = l.day
+   AND p.customer_key = l.customer_key
   GROUP BY 1
 ),
 days AS (
@@ -99,51 +112,27 @@ days AS (
 SELECT
   d.day,
   COALESCE(ld.total_leads, 0) AS total_leads,
-  COALESCE(ld.lead_customers, 0) AS lead_customers,
-  COALESCE(lnew.new_lead_customers, 0) AS new_lead_customers,
-  COALESCE(lret.returning_lead_customers, 0) AS returning_lead_customers,
+  COALESCE(lnr.new_leads, 0) AS new_leads,
+  COALESCE(lnr.returning_leads, 0) AS returning_leads,
   COALESCE(pd.paid_orders, 0) AS paid_orders,
-  COALESCE(pd.paid_customers, 0) AS paid_customers,
-  COALESCE(pnew.new_paid_customers, 0) AS new_paid_customers,
-  COALESCE(pret.returning_paid_customers, 0) AS returning_paid_customers,
+  COALESCE(pnr.new_paid_packages, 0) AS new_paid_packages,
+  COALESCE(pnr.returning_paid_packages, 0) AS returning_paid_packages,
 
   COALESCE(pd.revenue_net, 0) AS revenue_net,
   SAFE_DIVIDE(COALESCE(pd.revenue_net, 0), NULLIF(pd.paid_orders, 0)) AS aov_net,
 
   COALESCE(ed.enrolled_orders, 0) AS enrolled_orders,
-  COALESCE(ed.enrolled_customers, 0) AS enrolled_customers,
   COALESCE(ed.seats_sold, 0) AS seats_sold,
   SAFE_DIVIDE(
-    COUNT(DISTINCT IF(lc.customer_key IS NOT NULL AND pc.customer_key IS NOT NULL, lc.customer_key, NULL)),
-    NULLIF(COALESCE(ld.lead_customers, 0), 0)
-  ) AS same_day_lead_to_paid_customer_rate
+    COALESCE(sdlp.lead_submissions_with_paid_same_day, 0),
+    NULLIF(COALESCE(ld.total_leads, 0), 0)
+  ) AS same_day_lead_to_paid_rate
 
 FROM days d
 LEFT JOIN leads_d ld ON ld.day = d.day
 LEFT JOIN paid_d  pd ON pd.day = d.day
 LEFT JOIN enroll_d ed ON ed.day = d.day
-
-LEFT JOIN lead_new_returning_d lnew ON lnew.day = d.day
-LEFT JOIN paid_new_returning_d pnew ON pnew.day = d.day
-LEFT JOIN returning_lead_customers_d lret ON lret.day = d.day
-LEFT JOIN returning_paid_customers_d pret ON pret.day = d.day
-LEFT JOIN (
-  SELECT DISTINCT DATE(lead_created_at) AS day, customer_key
-  FROM ${ref('fact_leads')}
-) lc ON lc.day = d.day
-LEFT JOIN (
-  SELECT DISTINCT DATE(paid_at) AS day, customer_key
-  FROM ${ref('fact_payments')}
-  WHERE payment_status_bucket = 'paid'
-) pc ON pc.day = d.day AND pc.customer_key = lc.customer_key
-
-GROUP BY
-  d.day,
-  ld.total_leads, ld.lead_customers,
-  lnew.new_lead_customers, lret.returning_lead_customers,
-  pd.paid_orders, pd.paid_customers,
-  pnew.new_paid_customers, pret.returning_paid_customers,
-  pd.revenue_net,
-  ed.enrolled_orders, ed.enrolled_customers, ed.seats_sold
-
+LEFT JOIN lead_new_returning_d lnr ON lnr.day = d.day
+LEFT JOIN paid_new_returning_d pnr ON pnr.day = d.day
+LEFT JOIN same_day_lead_to_paid_d sdlp ON sdlp.day = d.day
 ORDER BY d.day
