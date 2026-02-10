@@ -1,0 +1,139 @@
+config {
+    type : 'table',
+    schema : 'marjala',
+    tags: ["marjala"]
+}
+with dates as (
+  select CURRENT_DATE() as as_of_date
+),
+paid_txn AS (
+  SELECT
+    customer_key,
+    DATE(paid_at) AS paid_day,
+    SAFE_DIVIDE(amount_paid_in_USD, 1.15) AS revenue_net
+  FROM ${ref('fact_payments')}
+  WHERE payment_status_bucket = 'paid'
+    AND customer_key IS NOT NULL
+    AND paid_at IS NOT NULL
+),
+
+first_paid AS (
+  SELECT
+    customer_key,
+    MIN(paid_day) AS cohort_day
+  FROM paid_txn
+  GROUP BY 1
+),
+
+cohort_size AS (
+  SELECT
+    cohort_day,
+    COUNT(DISTINCT customer_key) AS cohort_paid_users
+  FROM first_paid
+  GROUP BY 1
+),
+
+txn_with_age AS (
+  SELECT
+    fp.cohort_day,
+    DATE_DIFF(t.paid_day, fp.cohort_day, DAY) AS age_day,
+    t.revenue_net
+  FROM first_paid fp
+  JOIN paid_txn t
+    ON t.customer_key = fp.customer_key
+  WHERE DATE_DIFF(t.paid_day, fp.cohort_day, DAY) BETWEEN 0 AND 360
+),
+
+cohort_revenue AS (
+  SELECT
+    cohort_day,
+    SUM(IF(age_day BETWEEN 0 AND 0,   revenue_net, 0)) AS revenue_cum_d0,
+    SUM(IF(age_day BETWEEN 0 AND 1,   revenue_net, 0)) AS revenue_cum_d1,
+    SUM(IF(age_day BETWEEN 0 AND 3,   revenue_net, 0)) AS revenue_cum_d3,
+    SUM(IF(age_day BETWEEN 0 AND 7,   revenue_net, 0)) AS revenue_cum_d7,
+    SUM(IF(age_day BETWEEN 0 AND 14,  revenue_net, 0)) AS revenue_cum_d14,
+    SUM(IF(age_day BETWEEN 0 AND 30,  revenue_net, 0)) AS revenue_cum_d30,
+    SUM(IF(age_day BETWEEN 0 AND 60,  revenue_net, 0)) AS revenue_cum_d60,
+    SUM(IF(age_day BETWEEN 0 AND 90,  revenue_net, 0)) AS revenue_cum_d90,
+    SUM(IF(age_day BETWEEN 0 AND 180, revenue_net, 0)) AS revenue_cum_d180,
+    SUM(IF(age_day BETWEEN 0 AND 360, revenue_net, 0)) AS revenue_cum_d360
+  FROM txn_with_age
+  GROUP BY 1
+),
+
+final AS (
+  SELECT
+    cs.cohort_day AS day,
+    cs.cohort_paid_users,
+    DATE_DIFF(as_of_date, cs.cohort_day, DAY) AS cohort_age_days,
+
+    -- matured users (D0..D360)
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 0,   cs.cohort_paid_users, 0) AS matured_users_d0,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 1,   cs.cohort_paid_users, 0) AS matured_users_d1,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 3,   cs.cohort_paid_users, 0) AS matured_users_d3,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 7,   cs.cohort_paid_users, 0) AS matured_users_d7,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 14,  cs.cohort_paid_users, 0) AS matured_users_d14,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 30,  cs.cohort_paid_users, 0) AS matured_users_d30,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 60,  cs.cohort_paid_users, 0) AS matured_users_d60,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 90,  cs.cohort_paid_users, 0) AS matured_users_d90,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 180, cs.cohort_paid_users, 0) AS matured_users_d180,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 360, cs.cohort_paid_users, 0) AS matured_users_d360,
+
+    -- matured revenue cumulative (D0..D360)
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 0,   cr.revenue_cum_d0,   0) AS matured_revenue_cum_d0,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 1,   cr.revenue_cum_d1,   0) AS matured_revenue_cum_d1,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 3,   cr.revenue_cum_d3,   0) AS matured_revenue_cum_d3,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 7,   cr.revenue_cum_d7,   0) AS matured_revenue_cum_d7,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 14,  cr.revenue_cum_d14,  0) AS matured_revenue_cum_d14,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 30,  cr.revenue_cum_d30,  0) AS matured_revenue_cum_d30,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 60,  cr.revenue_cum_d60,  0) AS matured_revenue_cum_d60,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 90,  cr.revenue_cum_d90,  0) AS matured_revenue_cum_d90,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 180, cr.revenue_cum_d180, 0) AS matured_revenue_cum_d180,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 360, cr.revenue_cum_d360, 0) AS matured_revenue_cum_d360
+  FROM cohort_size cs,dates
+  LEFT JOIN cohort_revenue cr
+    USING (cohort_day)
+)
+
+SELECT
+  day,
+  cohort_paid_users,
+
+  -- matured users (0 -> 360)
+  matured_users_d0,
+  matured_users_d1,
+  matured_users_d3,
+  matured_users_d7,
+  matured_users_d14,
+  matured_users_d30,
+  matured_users_d60,
+  matured_users_d90,
+  matured_users_d180,
+  matured_users_d360,
+
+  -- matured revenue cumulative (0 -> 360)
+  matured_revenue_cum_d0,
+  matured_revenue_cum_d1,
+  matured_revenue_cum_d3,
+  matured_revenue_cum_d7,
+  matured_revenue_cum_d14,
+  matured_revenue_cum_d30,
+  matured_revenue_cum_d60,
+  matured_revenue_cum_d90,
+  matured_revenue_cum_d180,
+  matured_revenue_cum_d360,
+
+  -- matured LTV cumulative (0 -> 360)
+  SAFE_DIVIDE(matured_revenue_cum_d0,   NULLIF(matured_users_d0, 0))   AS matured_ltv_cum_d0,
+  SAFE_DIVIDE(matured_revenue_cum_d1,   NULLIF(matured_users_d1, 0))   AS matured_ltv_cum_d1,
+  SAFE_DIVIDE(matured_revenue_cum_d3,   NULLIF(matured_users_d3, 0))   AS matured_ltv_cum_d3,
+  SAFE_DIVIDE(matured_revenue_cum_d7,   NULLIF(matured_users_d7, 0))   AS matured_ltv_cum_d7,
+  SAFE_DIVIDE(matured_revenue_cum_d14,  NULLIF(matured_users_d14, 0))  AS matured_ltv_cum_d14,
+  SAFE_DIVIDE(matured_revenue_cum_d30,  NULLIF(matured_users_d30, 0))  AS matured_ltv_cum_d30,
+  SAFE_DIVIDE(matured_revenue_cum_d60,  NULLIF(matured_users_d60, 0))  AS matured_ltv_cum_d60,
+  SAFE_DIVIDE(matured_revenue_cum_d90,  NULLIF(matured_users_d90, 0))  AS matured_ltv_cum_d90,
+  SAFE_DIVIDE(matured_revenue_cum_d180, NULLIF(matured_users_d180, 0)) AS matured_ltv_cum_d180,
+  SAFE_DIVIDE(matured_revenue_cum_d360, NULLIF(matured_users_d360, 0)) AS matured_ltv_cum_d360
+
+FROM final
+ORDER BY day

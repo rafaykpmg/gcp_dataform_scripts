@@ -16,8 +16,10 @@ SELECT
   )
 ) AS customer_key,
   COALESCE(NULLIF(TRIM(country_code), ''), 'NA') AS country_code,
+  phone_number,
+  email,
   MIN(created_at) AS first_seen_at,
   MAX(updated_at) AS last_seen_at
 FROM al-gooru.hubspot.id_course_submissions
 WHERE deleted_at IS NULL
-GROUP BY 1, 2
+GROUP BY 1, 2, 3, 4

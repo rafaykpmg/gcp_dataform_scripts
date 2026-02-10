@@ -3,6 +3,7 @@ config {
     schema : 'marjala',
     tags: ["marjala"]
 }
+
 WITH
 leads_base AS (
   SELECT DISTINCT
@@ -10,6 +11,7 @@ leads_base AS (
     submission_id,
     customer_key
   FROM ${ref('fact_leads')}
+  WHERE customer_key IS NOT NULL
 ),
 
 paid_base AS (
@@ -20,15 +22,8 @@ paid_base AS (
     SUM(SAFE_DIVIDE(amount_paid_in_USD, 1.15)) AS revenue_net
   FROM ${ref('fact_payments')}
   WHERE payment_status_bucket = 'paid'
+    AND customer_key IS NOT NULL
   GROUP BY 1,2,3
-),
-
-enroll_base AS (
-  SELECT DISTINCT
-    DATE(enrolled_at) AS day,
-    submission_id,
-    customer_key
-  FROM ${ref('fact_enrollments')}
 ),
 
 first_lead_customer AS (
@@ -46,6 +41,7 @@ first_paid_customer AS (
   FROM paid_base
   GROUP BY 1
 ),
+
 leads_d AS (
   SELECT
     day,
@@ -65,12 +61,13 @@ paid_d AS (
 
 enroll_d AS (
   SELECT
-    date(created_at) day,
+    DATE(enrolled_at) AS day,
     COUNT(DISTINCT submission_id) AS enrolled_orders,
-    COUNT(1) AS seats_sold 
+    COUNT(1) AS seats_sold
   FROM ${ref('fact_enrollments')}
   GROUP BY 1
 ),
+
 lead_new_returning_d AS (
   SELECT
     l.day,
@@ -81,7 +78,8 @@ lead_new_returning_d AS (
     ON fl.customer_key = l.customer_key
   GROUP BY 1
 ),
-paid_new_returning_d AS (
+
+paid_pkg_new_returning_d AS (
   SELECT
     p.day,
     COUNT(DISTINCT IF(fp.first_paid_day = p.day, p.submission_id, NULL)) AS new_paid_packages,
@@ -91,22 +89,39 @@ paid_new_returning_d AS (
     ON fp.customer_key = p.customer_key
   GROUP BY 1
 ),
+
+paid_pkg_revenue_split_d AS (
+  SELECT
+    p.day,
+    SUM(IF(fp.first_paid_day = p.day, p.revenue_net, 0)) AS revenue_new_packages,
+    SUM(IF(fp.first_paid_day < p.day, p.revenue_net, 0)) AS revenue_returning_packages
+  FROM paid_base p
+  JOIN first_paid_customer fp
+    ON fp.customer_key = p.customer_key
+  GROUP BY 1
+),
+
 same_day_lead_to_paid_d AS (
   SELECT
     l.day,
     COUNT(DISTINCT l.submission_id) AS lead_submissions_with_paid_same_day
   FROM leads_base l
-  JOIN paid_base p
+  JOIN (
+    SELECT DISTINCT day, customer_key
+    FROM paid_base
+  ) p
     ON p.day = l.day
    AND p.customer_key = l.customer_key
   GROUP BY 1
 ),
+
 days AS (
   SELECT day FROM leads_d
   UNION DISTINCT SELECT day FROM paid_d
   UNION DISTINCT SELECT day FROM enroll_d
   UNION DISTINCT SELECT day FROM lead_new_returning_d
-  UNION DISTINCT SELECT day FROM paid_new_returning_d
+  UNION DISTINCT SELECT day FROM paid_pkg_new_returning_d
+  UNION DISTINCT SELECT day FROM paid_pkg_revenue_split_d
 )
 
 SELECT
@@ -117,22 +132,22 @@ SELECT
   COALESCE(pd.paid_orders, 0) AS paid_orders,
   COALESCE(pnr.new_paid_packages, 0) AS new_paid_packages,
   COALESCE(pnr.returning_paid_packages, 0) AS returning_paid_packages,
-
   COALESCE(pd.revenue_net, 0) AS revenue_net,
   SAFE_DIVIDE(COALESCE(pd.revenue_net, 0), NULLIF(pd.paid_orders, 0)) AS aov_net,
-
+  COALESCE(prs.revenue_new_packages, 0) AS revenue_new_packages,
+  COALESCE(prs.revenue_returning_packages, 0) AS revenue_returning_packages,
   COALESCE(ed.enrolled_orders, 0) AS enrolled_orders,
   COALESCE(ed.seats_sold, 0) AS seats_sold,
   SAFE_DIVIDE(
     COALESCE(sdlp.lead_submissions_with_paid_same_day, 0),
     NULLIF(COALESCE(ld.total_leads, 0), 0)
   ) AS same_day_lead_to_paid_rate
-
 FROM days d
 LEFT JOIN leads_d ld ON ld.day = d.day
-LEFT JOIN paid_d  pd ON pd.day = d.day
+LEFT JOIN paid_d pd ON pd.day = d.day
 LEFT JOIN enroll_d ed ON ed.day = d.day
 LEFT JOIN lead_new_returning_d lnr ON lnr.day = d.day
-LEFT JOIN paid_new_returning_d pnr ON pnr.day = d.day
+LEFT JOIN paid_pkg_new_returning_d pnr ON pnr.day = d.day
+LEFT JOIN paid_pkg_revenue_split_d prs ON prs.day = d.day
 LEFT JOIN same_day_lead_to_paid_d sdlp ON sdlp.day = d.day
 ORDER BY d.day

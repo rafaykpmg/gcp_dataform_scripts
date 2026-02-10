@@ -29,3 +29,4 @@ FROM al-gooru.hubspot.id_course_students st
 JOIN ${ref('fact_leads')} cs
   ON cs.submission_id = st.submission_id
 WHERE st.deleted_at IS NULL
+and lower(st.name) not like ('%test%')
