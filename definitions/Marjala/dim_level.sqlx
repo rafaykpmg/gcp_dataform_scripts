@@ -1,0 +1,21 @@
+config {
+    type : 'incremental',
+    schema : 'marjala',
+    protected : true ,
+    uniqueKey : ['level_id']
+}
+SELECT
+  cl.id        AS level_id,
+  cl.course_id,
+  cl.code      AS level_code,
+  cl.name_en,
+  cl.name_ar,
+  cl.description_en,
+  cl.description_ar,
+  cl.extra_price,
+  cl.sort_order,
+  cl.created_at,
+  cl.updated_at,
+  cl.deleted_at
+FROM al-gooru.hubspot.id_course_levels cl
+WHERE cl.deleted_at IS NULL

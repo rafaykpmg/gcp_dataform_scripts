@@ -1,0 +1,19 @@
+config {
+    type : 'incremental',
+    name : 'dim_course',
+    schema : 'marjala',
+    protected : true ,
+    uniqueKey : ['course_id']
+}
+SELECT
+  c.id          AS course_id,
+  c.code        AS course_code,
+  c.name_en,
+  c.name_ar,
+  c.price       AS base_price,
+  c.price_type,
+  c.created_at,
+  c.updated_at,
+  c.deleted_at
+FROM al-gooru.hubspot.id_courses c
+WHERE c.deleted_at IS NULL

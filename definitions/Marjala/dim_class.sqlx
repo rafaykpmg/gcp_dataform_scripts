@@ -1,0 +1,29 @@
+config {
+    type : 'incremental',
+    schema : 'marjala',
+    protected : true ,
+    uniqueKey : ['class_id']
+}
+SELECT
+  cc.id          AS class_id,
+  cc.level_id,
+  cl.course_id,
+  cc.code        AS class_code,
+  cc.name_en,
+  cc.name_ar,
+  cc.capacity,
+  cc.starts_at,
+  cc.ends_at,
+  cc.is_active,
+  cc.location_en,
+  cc.location_ar,
+  cc.location_url,
+  cc.display_price,
+  cc.extra_price,
+  cc.created_at,
+  cc.updated_at,
+  cc.deleted_at
+FROM al-gooru.hubspot.id_course_classes cc
+JOIN ${ref('dim_level')} cl
+  ON cl.level_id = cc.level_id
+WHERE cc.deleted_at IS NULL

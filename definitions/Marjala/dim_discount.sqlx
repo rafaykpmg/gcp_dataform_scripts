@@ -1,0 +1,21 @@
+
+config {
+    type : 'incremental',
+    schema : 'marjala',
+    protected : true ,
+    uniqueKey : ['discount_id']
+}
+SELECT
+  cd.id             AS discount_id,
+  cd.course_id,
+  cd.discount_type,
+  cd.discount_value,
+  cd.floor_price,
+  cd.min_students,
+  cd.max_beneficiaries,
+  cd.applies_to,
+  cd.created_at,
+  cd.updated_at,
+  cd.deleted_at
+FROM al-gooru.hubspot.id_course_discounts cd
+WHERE cd.deleted_at IS NULL

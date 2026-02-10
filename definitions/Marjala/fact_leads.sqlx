@@ -1,0 +1,43 @@
+config {
+    type : 'incremental',
+    schema : 'marjala',
+    protected : true ,
+    uniqueKey : ['submission_id']
+}
+SELECT
+  cs.id                         AS submission_id,
+  TO_HEX(
+  SHA256(
+    CONCAT(
+      COALESCE(NULLIF(TRIM(country_code), ''), 'NA'), '|',
+      COALESCE(NULLIF(REGEXP_REPLACE(TRIM(phone_number), r'[^0-9]+', ''), ''), ''), '|',
+      COALESCE(NULLIF(LOWER(TRIM(email)), ''), '')
+    )
+  )
+) AS customer_key,
+  cs.course_id,
+  cs.class_id,
+  cs.name                       AS lead_name,
+  cs.country_code,
+  cs.phone_number,
+  cs.email,
+  cs.status,
+  CASE
+    WHEN LOWER(cs.status) IN ('paid','success','completed','confirmed') THEN 'paid'
+    WHEN LOWER(cs.status) IN ('pending','initiated','created','link_sent') THEN 'pending'
+    WHEN LOWER(cs.status) IN ('failed','cancelled','canceled','expired') THEN 'failed'
+    WHEN LOWER(cs.status) IN ('refunded','refund') THEN 'refunded'
+    ELSE 'other'
+  END                           AS status_bucket,
+  cs.price                      AS lead_price_captured,
+  cs.charge_id,
+  cs.payment_link,
+  cs.payment_link_generated_at,
+  cs.price_modified_by,
+  cs.price_modified_at,
+  cs.extra_info,
+  cs.created_at                 AS lead_created_at,
+  cs.updated_at                 AS lead_updated_at,
+  cs.deleted_at
+FROM al-gooru.hubspot.id_course_submissions cs
+WHERE cs.deleted_at IS NULL

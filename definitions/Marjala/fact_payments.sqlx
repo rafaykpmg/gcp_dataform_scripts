@@ -1,0 +1,34 @@
+config {
+    type : 'incremental',
+    schema : 'marjala',
+    protected : true ,
+    uniqueKey : ['submission_id']
+}
+SELECT
+  cs.charge_id                  AS payment_id,
+  cs.id                         AS submission_id,
+  TO_HEX(
+  SHA256(
+    CONCAT(
+      COALESCE(NULLIF(TRIM(country_code), ''), 'NA'), '|',
+      COALESCE(NULLIF(REGEXP_REPLACE(TRIM(phone_number), r'[^0-9]+', ''), ''), ''), '|',
+      COALESCE(NULLIF(LOWER(TRIM(email)), ''), '')
+    )
+  )
+) AS customer_key,
+  cs.course_id,
+  cs.class_id,
+  cs.status,
+  CASE
+    WHEN LOWER(cs.status) IN ('paid','success','completed','confirmed') THEN 'paid'
+    WHEN LOWER(cs.status) IN ('refunded','refund') THEN 'refunded'
+    WHEN LOWER(cs.status) IN ('failed','cancelled','canceled','expired') THEN 'failed'
+    ELSE 'other'
+  END                           AS payment_status_bucket,
+  cs.price                      AS amount_paid,
+  round(safe_divide(price,3.65),0) AS amount_paid_in_USD,
+  cs.updated_at                 AS paid_at,
+  cs.created_at                 AS submission_created_at
+FROM al-gooru.hubspot.id_course_submissions cs
+WHERE cs.deleted_at IS NULL
+  AND LOWER(cs.status) IN ('paid','success','completed','confirmed')

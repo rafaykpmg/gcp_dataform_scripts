@@ -1,0 +1,30 @@
+config {
+    type : 'incremental',
+    schema : 'marjala',
+    protected : true ,
+    uniqueKey : ['enrollment_id']
+}
+SELECT
+  st.id                         AS enrollment_id,
+  st.submission_id,
+  cs.course_id,
+  cs.class_id,
+  TO_HEX(
+  SHA256(
+    CONCAT(
+      COALESCE(NULLIF(TRIM(country_code), ''), 'NA'), '|',
+      COALESCE(NULLIF(REGEXP_REPLACE(TRIM(phone_number), r'[^0-9]+', ''), ''), ''), '|',
+      COALESCE(NULLIF(LOWER(TRIM(email)), ''), '')
+    )
+  )
+) AS customer_key,
+  st.name                       AS student_name,
+  st.class_id                   AS student_class_id,
+  COALESCE(st.enrolled_at, st.created_at) AS enrolled_at,
+  st.created_at,
+  st.updated_at,
+  st.deleted_at
+FROM al-gooru.hubspot.id_course_students st
+JOIN ${ref('fact_leads')} cs
+  ON cs.submission_id = st.submission_id
+WHERE st.deleted_at IS NULL
