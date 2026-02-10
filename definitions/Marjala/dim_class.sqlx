@@ -1,8 +1,9 @@
 config {
     type : 'incremental',
     schema : 'marjala',
-    protected : true ,
-    uniqueKey : ['class_id']
+    protected : false ,
+    uniqueKey : ['class_id'],
+    tags: ["marjala"]
 }
 SELECT
   cc.id          AS class_id,
@@ -19,7 +20,9 @@ SELECT
   cc.location_ar,
   cc.location_url,
   cc.display_price,
+  round(safe_divide(cc.display_price,3.65),0)   as display_price_in_USD,
   cc.extra_price,
+  round(safe_divide(cc.extra_price,3.65),0)   as extra_price_in_USD,
   cc.created_at,
   cc.updated_at,
   cc.deleted_at

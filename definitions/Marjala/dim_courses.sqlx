@@ -2,8 +2,9 @@ config {
     type : 'incremental',
     name : 'dim_course',
     schema : 'marjala',
-    protected : true ,
-    uniqueKey : ['course_id']
+    protected : false ,
+    uniqueKey : ['course_id'],
+    tags: ["marjala"]
 }
 SELECT
   c.id          AS course_id,
@@ -11,6 +12,7 @@ SELECT
   c.name_en,
   c.name_ar,
   c.price       AS base_price,
+  round(safe_divide(price,3.65),0)       AS base_price_in_USD,
   c.price_type,
   c.created_at,
   c.updated_at,

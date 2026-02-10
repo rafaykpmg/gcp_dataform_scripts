@@ -1,8 +1,9 @@
 config {
     type : 'incremental',
     schema : 'marjala',
-    protected : true ,
-    uniqueKey : ['submission_id']
+    protected : false ,
+    uniqueKey : ['submission_id'],
+    tags: ["marjala"]
 }
 SELECT
   cs.id                         AS submission_id,
@@ -30,6 +31,7 @@ SELECT
     ELSE 'other'
   END                           AS status_bucket,
   cs.price                      AS lead_price_captured,
+  round(safe_divide(price,3.65),0)       AS lead_price_captured_in_USD,
   cs.charge_id,
   cs.payment_link,
   cs.payment_link_generated_at,

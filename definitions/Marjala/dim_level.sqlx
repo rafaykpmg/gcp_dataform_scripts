@@ -1,8 +1,9 @@
 config {
     type : 'incremental',
     schema : 'marjala',
-    protected : true ,
-    uniqueKey : ['level_id']
+    protected : false ,
+    uniqueKey : ['level_id'],
+    tags: ["marjala"]
 }
 SELECT
   cl.id        AS level_id,
@@ -13,6 +14,7 @@ SELECT
   cl.description_en,
   cl.description_ar,
   cl.extra_price,
+  round(safe_divide(extra_price,3.65),0)       AS extra_price_in_USD,
   cl.sort_order,
   cl.created_at,
   cl.updated_at,

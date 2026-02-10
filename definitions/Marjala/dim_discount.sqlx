@@ -2,8 +2,9 @@
 config {
     type : 'incremental',
     schema : 'marjala',
-    protected : true ,
-    uniqueKey : ['discount_id']
+    protected : false ,
+    uniqueKey : ['discount_id'],
+    tags: ["marjala"]
 }
 SELECT
   cd.id             AS discount_id,
@@ -11,6 +12,7 @@ SELECT
   cd.discount_type,
   cd.discount_value,
   cd.floor_price,
+  round(safe_divide(floor_price,3.65),0)  as floor_price_in_USD,
   cd.min_students,
   cd.max_beneficiaries,
   cd.applies_to,
