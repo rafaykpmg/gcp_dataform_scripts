@@ -1,7 +1,7 @@
 config {
     type : 'incremental',
     schema : 'marjala',
-    protected : false ,
+    protected : true ,
     uniqueKey : ['customer_key'],
     tags: ["marjala"]
 }
