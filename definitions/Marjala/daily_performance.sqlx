@@ -102,8 +102,8 @@ paid_pkg_new_returning_d AS (
 paid_pkg_revenue_split_d AS (
   SELECT
     p.day,
-    SUM(IF(fp.first_paid_day = p.day, p.revenue_net, 0)) AS revenue_new_packages,
-    SUM(IF(fp.first_paid_day < p.day, p.revenue_net, 0)) AS revenue_returning_packages
+    SUM(IF(fp.first_paid_day = p.day, p.gross_revenue, 0)) AS revenue_new_packages,
+    SUM(IF(fp.first_paid_day < p.day, p.gross_revenue, 0)) AS revenue_returning_packages
   FROM paid_base p
   JOIN first_paid_customer fp
     ON fp.customer_key = p.customer_key
