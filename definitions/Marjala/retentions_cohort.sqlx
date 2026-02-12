@@ -1,0 +1,148 @@
+config {
+    type : 'table',
+    schema : 'marjala',
+    tags: ["marjala"]
+}
+with dates as (
+  select CURRENT_DATE() as as_of_date
+),
+lead_events AS (
+  SELECT DISTINCT
+    customer_key,
+    DATE(lead_created_at) AS lead_day
+  FROM ${ref('fact_leads')}
+  WHERE customer_key IS NOT NULL
+    AND lead_created_at IS NOT NULL
+),
+
+first_lead AS (
+  SELECT
+    customer_key,
+    MIN(lead_day) AS cohort_day
+  FROM lead_events
+  GROUP BY 1
+),
+
+cohort_size AS (
+  SELECT
+    cohort_day,
+    COUNT(DISTINCT customer_key) AS cohort_lead_users
+  FROM first_lead
+  GROUP BY 1
+),
+
+events_with_age AS (
+  SELECT
+    fl.cohort_day,
+    e.customer_key,
+    DATE_DIFF(e.lead_day, fl.cohort_day, DAY) AS days_since_joined
+  FROM first_lead fl
+  JOIN lead_events e
+    ON e.customer_key = fl.customer_key
+  WHERE DATE_DIFF(e.lead_day, fl.cohort_day, DAY) BETWEEN 0 AND 360
+),
+
+user_flags AS (
+  SELECT
+    cohort_day,
+    customer_key,
+    MAX(CASE WHEN days_since_joined = 0 THEN 1 ELSE 0 END) AS d0,
+    MAX(CASE WHEN days_since_joined = 1 THEN 1 ELSE 0 END) AS d1,
+    MAX(CASE WHEN days_since_joined BETWEEN 1 AND 3 THEN 1 ELSE 0 END) AS d3,
+    MAX(CASE WHEN days_since_joined BETWEEN 1 AND 7 THEN 1 ELSE 0 END) AS d7,
+    MAX(CASE WHEN days_since_joined BETWEEN 1 AND 14 THEN 1 ELSE 0 END) AS d14,
+    MAX(CASE WHEN days_since_joined BETWEEN 1 AND 30 THEN 1 ELSE 0 END) AS d30,
+    MAX(CASE WHEN days_since_joined BETWEEN 1 AND 60 THEN 1 ELSE 0 END) AS d60,
+    MAX(CASE WHEN days_since_joined BETWEEN 1 AND 90 THEN 1 ELSE 0 END) AS d90,
+    MAX(CASE WHEN days_since_joined BETWEEN 1 AND 180 THEN 1 ELSE 0 END) AS d180,
+    MAX(CASE WHEN days_since_joined BETWEEN 1 AND 360 THEN 1 ELSE 0 END) AS d360
+  FROM events_with_age
+  GROUP BY 1,2
+),
+
+retention_counts AS (
+  SELECT
+    cohort_day,
+    SUM(d0) AS retained_d0,
+    SUM(d1) AS retained_d1,
+    SUM(d3) AS retained_d3,
+    SUM(d7) AS retained_d7,
+    SUM(d14) AS retained_d14,
+    SUM(d30) AS retained_d30,
+    SUM(d60) AS retained_d60,
+    SUM(d90) AS retained_d90,
+    SUM(d180) AS retained_d180,
+    SUM(d360) AS retained_d360
+  FROM user_flags
+  GROUP BY 1
+),
+
+final AS (
+  SELECT
+    cs.cohort_day AS day,
+    cs.cohort_lead_users,
+
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 0,   cs.cohort_lead_users, 0) AS matured_users_d0,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 1,   cs.cohort_lead_users, 0) AS matured_users_d1,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 3,   cs.cohort_lead_users, 0) AS matured_users_d3,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 7,   cs.cohort_lead_users, 0) AS matured_users_d7,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 14,  cs.cohort_lead_users, 0) AS matured_users_d14,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 30,  cs.cohort_lead_users, 0) AS matured_users_d30,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 60,  cs.cohort_lead_users, 0) AS matured_users_d60,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 90,  cs.cohort_lead_users, 0) AS matured_users_d90,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 180, cs.cohort_lead_users, 0) AS matured_users_d180,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 360, cs.cohort_lead_users, 0) AS matured_users_d360,
+
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 0,   COALESCE(rc.retained_d0, 0),   0) AS matured_retained_d0,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 1,   COALESCE(rc.retained_d1, 0),   0) AS matured_retained_d1,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 3,   COALESCE(rc.retained_d3, 0),   0) AS matured_retained_d3,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 7,   COALESCE(rc.retained_d7, 0),   0) AS matured_retained_d7,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 14,  COALESCE(rc.retained_d14, 0),  0) AS matured_retained_d14,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 30,  COALESCE(rc.retained_d30, 0),  0) AS matured_retained_d30,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 60,  COALESCE(rc.retained_d60, 0),  0) AS matured_retained_d60,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 90,  COALESCE(rc.retained_d90, 0),  0) AS matured_retained_d90,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 180, COALESCE(rc.retained_d180, 0), 0) AS matured_retained_d180,
+    IF(DATE_DIFF(as_of_date, cs.cohort_day, DAY) >= 360, COALESCE(rc.retained_d360, 0), 0) AS matured_retained_d360
+  FROM cohort_size cs,dates
+  LEFT JOIN retention_counts rc
+    USING (cohort_day)
+)
+
+SELECT
+  day,
+  cohort_lead_users,
+
+  matured_users_d0,
+  matured_users_d1,
+  matured_users_d3,
+  matured_users_d7,
+  matured_users_d14,
+  matured_users_d30,
+  matured_users_d60,
+  matured_users_d90,
+  matured_users_d180,
+  matured_users_d360,
+
+  matured_retained_d0,
+  matured_retained_d1,
+  matured_retained_d3,
+  matured_retained_d7,
+  matured_retained_d14,
+  matured_retained_d30,
+  matured_retained_d60,
+  matured_retained_d90,
+  matured_retained_d180,
+  matured_retained_d360,
+
+  SAFE_DIVIDE(matured_retained_d0, NULLIF(matured_users_d0, 0)) AS matured_retention_d0,
+  SAFE_DIVIDE(matured_retained_d1, NULLIF(matured_users_d1, 0)) AS matured_retention_d1,
+  SAFE_DIVIDE(matured_retained_d3, NULLIF(matured_users_d3, 0)) AS matured_retention_d3,
+  SAFE_DIVIDE(matured_retained_d7, NULLIF(matured_users_d7, 0)) AS matured_retention_d7,
+  SAFE_DIVIDE(matured_retained_d14, NULLIF(matured_users_d14, 0)) AS matured_retention_d14,
+  SAFE_DIVIDE(matured_retained_d30, NULLIF(matured_users_d30, 0)) AS matured_retention_d30,
+  SAFE_DIVIDE(matured_retained_d60, NULLIF(matured_users_d60, 0)) AS matured_retention_d60,
+  SAFE_DIVIDE(matured_retained_d90, NULLIF(matured_users_d90, 0)) AS matured_retention_d90,
+  SAFE_DIVIDE(matured_retained_d180, NULLIF(matured_users_d180, 0)) AS matured_retention_d180,
+  SAFE_DIVIDE(matured_retained_d360, NULLIF(matured_users_d360, 0)) AS matured_retention_d360
+FROM final
+ORDER BY day
