@@ -13,13 +13,21 @@ leads_base AS (
   FROM ${ref('fact_leads')}
   WHERE customer_key IS NOT NULL
 ),
+ad_spend as (
+  select date, sum(cost_usd) as total_marketing_spend_daily
+  from `al-gooru.production.marketing_growth_spend_final`
+  where date >= '2026-01-01'
+  group by all
+  order by 1
+),
 
 paid_base AS (
   SELECT
     DATE(paid_at) AS day,
     submission_id,
     customer_key,
-    SUM(SAFE_DIVIDE(amount_paid_in_USD, 1.15)) AS revenue_net
+    SUM(SAFE_DIVIDE(amount_paid_in_USD, 1.15)) AS revenue_net,
+    SUM(amount_paid_in_USD) AS gross_revenue
   FROM ${ref('fact_payments')}
   WHERE payment_status_bucket = 'paid'
     AND customer_key IS NOT NULL
@@ -54,7 +62,8 @@ paid_d AS (
   SELECT
     day,
     COUNT(DISTINCT submission_id) AS paid_orders,
-    SUM(revenue_net) AS revenue_net
+    SUM(revenue_net) AS revenue_net,
+    SUM(gross_revenue) AS gross_revenue,
   FROM paid_base
   GROUP BY 1
 ),
@@ -133,6 +142,7 @@ SELECT
   COALESCE(pnr.new_paid_packages, 0) AS new_paid_packages,
   COALESCE(pnr.returning_paid_packages, 0) AS returning_paid_packages,
   COALESCE(pd.revenue_net, 0) AS revenue_net,
+  COALESCE(pd.gross_revenue, 0) AS gross_revenue,
   SAFE_DIVIDE(COALESCE(pd.revenue_net, 0), NULLIF(pd.paid_orders, 0)) AS aov_net,
   COALESCE(prs.revenue_new_packages, 0) AS revenue_new_packages,
   COALESCE(prs.revenue_returning_packages, 0) AS revenue_returning_packages,
