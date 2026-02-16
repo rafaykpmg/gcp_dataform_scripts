@@ -595,7 +595,10 @@ group by all)
     a.* except(subject_levels), coalesce(d.name_en,a.subject_levels) as subject_levels,
     round(safe_divide(amount_refunded , 3.75),2) AS amount_refunded_from_tickets,
     number_of_hours_refunded as number_of_hours_refunded_from_tickets,
-    e.street_number as street_number_offline,e.route as route_offline,e.sublocality as sublocality_offline,e.city as city_offline,e.district as district_offline,e.state as state_offline,e.country as country_offline,e.postal_code as postal_code_offline,e.formatted_address as formatted_address_offline,e.latitude as latitude_offline,e.longitude as longitude_offline
+    e.street_number_offline,e.route_offline,e.sublocality_offline,
+    e.city_offline,e.district_offline,e.state_offline,e.country_offline,
+    e.postal_code_offline,e.formatted_address_offline,
+    e.lat as latitude_offline,e.lon as longitude_offline
   FROM
     cte a
     left join ticket_cte c 
@@ -604,7 +607,7 @@ group by all)
     `al-gooru.hubspot.id_subject_levels` d 
     on d.id = a.subject_levels
   LEFT JOIN
-    `al-gooru.raw.hubspot_offline_deals_location_details` e 
+    ${ref('deals_geocodes_raw_dataform')} e 
     on a.deal_id = e.deal_id
 WHERE  (LOWER(dealname) NOT LIKE '%test%' AND LOWER(dealname) NOT LIKE '%tset%' AND LOWER(dealname) NOT LIKE '%tst%') and
 dealname NOT LIKE '%test%' AND dealname <> 'anise safa' AND dealname NOT LIKE '%tset%' AND dealname NOT LIKE '%tst%'

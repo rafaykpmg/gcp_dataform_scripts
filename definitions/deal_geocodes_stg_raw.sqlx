@@ -1,0 +1,31 @@
+config {
+    type: "incremental",
+    schema: "raw",
+    name: "deals_geocodes_raw_dataform",
+    tags:["deals_pipeline"],
+    uniqueKey : ['deal_id'],
+    protected : true 
+}
+
+SELECT cast(deal_hs_id as int64) as deal_id,
+ JSON_VALUE(address_json, '$.street_number') AS street_number_offline,
+  JSON_VALUE(address_json, '$.road') AS route_offline,
+  COALESCE(
+    JSON_VALUE(address_json, '$.suburb'),
+    JSON_VALUE(address_json, '$.neighbourhood')
+  ) AS sublocality_offline,
+
+  JSON_VALUE(address_json, '$.city') AS city_offline,
+  COALESCE(
+    JSON_VALUE(address_json, '$.province'),
+    JSON_VALUE(address_json, '$.neighbourhood')
+  ) AS district_offline,
+  JSON_VALUE(address_json, '$.state') AS state_offline,
+  JSON_VALUE(address_json, '$.country') AS country_offline,
+  JSON_VALUE(address_json, '$.postcode') AS postal_code_offline,
+  JSON_VALUE(address_json, '$.formatted_address') AS formatted_address_offline,
+  lat,
+  lon,
+  address_json
+FROM `al-gooru.hubspot.id_deal_geocodes` 
+WHERE geocode_status='done' 
