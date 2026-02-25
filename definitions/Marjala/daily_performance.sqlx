@@ -17,6 +17,7 @@ ad_spend as (
   select date, sum(cost_usd) as total_marketing_spend_daily
   from `al-gooru.production.marketing_growth_spend_final`
   where date >= '2026-01-01'
+  and lower(`campaign name`) like ('%marjala%')
   group by all
   order by 1
 ),
@@ -135,6 +136,7 @@ days AS (
 
 SELECT
   d.day,
+  COALESCE(ad.total_marketing_spend_daily, 0) AS total_marketing_spend,
   COALESCE(ld.total_leads, 0) AS total_leads,
   COALESCE(lnr.new_leads, 0) AS new_leads,
   COALESCE(lnr.returning_leads, 0) AS returning_leads,
@@ -160,4 +162,5 @@ LEFT JOIN lead_new_returning_d lnr ON lnr.day = d.day
 LEFT JOIN paid_pkg_new_returning_d pnr ON pnr.day = d.day
 LEFT JOIN paid_pkg_revenue_split_d prs ON prs.day = d.day
 LEFT JOIN same_day_lead_to_paid_d sdlp ON sdlp.day = d.day
+LEFT JOIN ad_spend ad on ad.date=d.day
 ORDER BY d.day
