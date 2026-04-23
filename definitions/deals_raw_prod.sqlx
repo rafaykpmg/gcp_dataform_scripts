@@ -48,7 +48,7 @@ WITH
     WHEN closing_sales_owner_new = '253568105'  THEN 'Nahr Bakhuraybah'
     WHEN closing_sales_owner_new = '278156450'  THEN 'Hassan Kanj'
     WHEN closing_sales_owner_new = '495944521'  THEN 'Feras Hjazi'
-    WHEN closing_sales_owner_new = '1969106290' THEN 'Hanan Almostafa'
+    WHEN closing_sales_owner_new = '1969106290' THEN 'Hanan Almustafa'
     ELSE closing_sales_owner_new        -- or keep the raw value / name if you prefer
 END AS closing_sales_owner_new,
     contactphonenumberdeal AS contactphonenumberdeal,
