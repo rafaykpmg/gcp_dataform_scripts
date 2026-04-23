@@ -664,6 +664,7 @@ round(safe_divide(SAFE_CAST(first_payment_amount__sales_ as float64) , 3.75),2) 
   utm_medium AS utm_medium,
   utm_source AS utm_source,
   utm_term AS utm_term,
+  valid_lead_status,
   wbraid AS wbraid,
   web_page AS web_page,
   whatsapp_group_link AS whatsapp_group_link,

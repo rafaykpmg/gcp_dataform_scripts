@@ -49,7 +49,7 @@ WITH
     WHEN closing_sales_owner_new = '278156450'  THEN 'Hassan Kanj'
     WHEN closing_sales_owner_new = '495944521'  THEN 'Feras Hjazi'
     WHEN closing_sales_owner_new = '1969106290' THEN 'Hanan Almostafa'
-    ELSE NULL        -- or keep the raw value / name if you prefer
+    ELSE closing_sales_owner_new        -- or keep the raw value / name if you prefer
 END AS closing_sales_owner_new,
     contactphonenumberdeal AS contactphonenumberdeal,
     cp_blocked_package_timestamp AS cp_blocked_package_timestamp,
